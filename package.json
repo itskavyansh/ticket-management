@@ -1,0 +1,27 @@
+{
+  "name": "ai-ticket-management-platform",
+  "version": "1.0.0",
+  "description": "AI-powered ticket management system with Gemini API and MongoDB",
+  "scripts": {
+    "start": "python run.py",
+    "dev": "python run.py",
+    "setup": "python test_setup.py",
+    "install-all": "cd backend && npm install && cd ../frontend && npm install && cd ../ai-service && pip install -r requirements.txt",
+    "clean": "rm -rf backend/node_modules frontend/node_modules ai-service/__pycache__"
+  },
+  "keywords": [
+    "ai",
+    "ticket-management", 
+    "gemini",
+    "mongodb",
+    "fastapi",
+    "react",
+    "nodejs"
+  ],
+  "author": "AI Ticket Management Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "python": ">=3.11.0"
+  }
+}

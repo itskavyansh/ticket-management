@@ -21,8 +21,13 @@ git clone <this-repo>
 cd ai-ticket-management-platform
 
 # 2. Start everything (this installs dependencies and starts all services)
-python run.py
+python setup.py
 ```
+
+**Alternative startup methods:**
+- **Windows:** `run.bat`
+- **Linux/Mac:** `./run.sh` 
+- **Direct:** `python run.py`
 
 That's it! 🎉
 
@@ -105,6 +110,14 @@ For each ticket, AI provides:
 - Relevant knowledge base articles
 - Estimated time to resolve
 
+### 🤖 AI Assistant Chatbot
+Interactive AI assistant that helps with:
+- Finding and managing tickets
+- Understanding SLA status and compliance
+- Getting platform guidance and support
+- Analyzing workload and performance metrics
+- Powered by Google Gemini AI for natural conversations
+
 ### 📊 Real-time Dashboard
 See at a glance:
 - Total tickets and their status
@@ -128,6 +141,12 @@ See at a glance:
 
 ## Development
 
+**Test connections:**
+```bash
+# Test all service connections
+python test_connections.py
+```
+
 **Run tests:**
 ```bash
 # Backend
@@ -141,8 +160,8 @@ cd ai-service && pytest
 ```
 
 **Code structure:**
-- Frontend: React + TypeScript + Tailwind CSS
-- Backend: Node.js + Express + MongoDB
+- Frontend: React + TypeScript + Tailwind CSS + AI Chatbot
+- Backend: Node.js + Express + MongoDB + AI Chatbot API
 - AI Service: FastAPI + Python + Google Gemini
 
 ## What's Next?

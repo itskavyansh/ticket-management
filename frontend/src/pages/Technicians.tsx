@@ -13,125 +13,32 @@ import {
   MoreVertical,
   Edit,
   Trash2,
-  UserPlus
+  UserPlus,
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
+import { 
+  useTechnicians, 
+  useCreateTechnician, 
+  useUpdateTechnician, 
+  useDeleteTechnician,
+  useUpdateTechnicianStatus,
+  type Technician,
+  type CreateTechnicianData,
+  type UpdateTechnicianData
+} from '../hooks/useTechnicians';
+import toast from 'react-hot-toast';
 
-interface Technician {
-  id: string;
+// Form data interfaces
+interface TechnicianFormData {
   name: string;
   email: string;
   phone: string;
   department: string;
   location: string;
-  status: 'available' | 'busy' | 'offline';
-  currentTickets: number;
-  maxCapacity: number;
   specialties: string[];
-  averageResolutionTime: number;
-  slaCompliance: number;
-  totalResolved: number;
-  joinedDate: string;
-  avatar?: string;
+  maxCapacity: number;
 }
-
-const mockTechnicians: Technician[] = [
-  {
-    id: 'tech-1',
-    name: 'Rajesh Kumar',
-    email: 'rajesh.kumar@techsolutions.in',
-    phone: '+91 98765 43210',
-    department: 'IT Support',
-    location: 'Bangalore Office',
-    status: 'available',
-    currentTickets: 5,
-    maxCapacity: 10,
-    specialties: ['Hardware', 'Network', 'Windows'],
-    averageResolutionTime: 2.4,
-    slaCompliance: 96.5,
-    totalResolved: 342,
-    joinedDate: '2023-01-15'
-  },
-  {
-    id: 'tech-2',
-    name: 'Priya Sharma',
-    email: 'priya.sharma@techsolutions.in',
-    phone: '+91 87654 32109',
-    department: 'IT Support',
-    location: 'Mumbai Office',
-    status: 'busy',
-    currentTickets: 8,
-    maxCapacity: 8,
-    specialties: ['Software', 'Email', 'Security'],
-    averageResolutionTime: 1.8,
-    slaCompliance: 98.2,
-    totalResolved: 456,
-    joinedDate: '2022-08-20'
-  },
-  {
-    id: 'tech-3',
-    name: 'Amit Patel',
-    email: 'amit.patel@techsolutions.in',
-    phone: '+91 76543 21098',
-    department: 'Network Admin',
-    location: 'Pune Office',
-    status: 'available',
-    currentTickets: 3,
-    maxCapacity: 12,
-    specialties: ['Network', 'Server', 'Infrastructure'],
-    averageResolutionTime: 3.2,
-    slaCompliance: 94.8,
-    totalResolved: 289,
-    joinedDate: '2023-03-10'
-  },
-  {
-    id: 'tech-4',
-    name: 'Sneha Reddy',
-    email: 'sneha.reddy@techsolutions.in',
-    phone: '+91 65432 10987',
-    department: 'Security',
-    location: 'Hyderabad Office',
-    status: 'offline',
-    currentTickets: 0,
-    maxCapacity: 6,
-    specialties: ['Security', 'Compliance', 'Access Control'],
-    averageResolutionTime: 4.1,
-    slaCompliance: 92.3,
-    totalResolved: 178,
-    joinedDate: '2023-06-01'
-  },
-  {
-    id: 'tech-5',
-    name: 'Vikram Singh',
-    email: 'vikram.singh@techsolutions.in',
-    phone: '+91 54321 09876',
-    department: 'IT Support',
-    location: 'Delhi Office',
-    status: 'busy',
-    currentTickets: 7,
-    maxCapacity: 10,
-    specialties: ['Database', 'Cloud', 'DevOps'],
-    averageResolutionTime: 2.8,
-    slaCompliance: 95.1,
-    totalResolved: 267,
-    joinedDate: '2022-11-12'
-  },
-  {
-    id: 'tech-6',
-    name: 'Kavya Nair',
-    email: 'kavya.nair@techsolutions.in',
-    phone: '+91 43210 98765',
-    department: 'Network Admin',
-    location: 'Chennai Office',
-    status: 'available',
-    currentTickets: 4,
-    maxCapacity: 8,
-    specialties: ['Networking', 'Firewall', 'VPN'],
-    averageResolutionTime: 2.1,
-    slaCompliance: 97.3,
-    totalResolved: 198,
-    joinedDate: '2023-04-18'
-  }
-];
 
 const statusColors = {
   available: 'bg-green-100 text-green-800 border-green-200',
@@ -146,12 +53,116 @@ const statusIcons = {
 };
 
 export function Technicians() {
-  const [technicians] = useState<Technician[]>(mockTechnicians);
+  // API hooks
+  const { data: technicians = [], isLoading, error, refetch } = useTechnicians();
+  const createTechnicianMutation = useCreateTechnician();
+  const updateTechnicianMutation = useUpdateTechnician();
+  const deleteTechnicianMutation = useDeleteTechnician();
+  const updateStatusMutation = useUpdateTechnicianStatus();
+
+  // Local state
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingTechnician, setEditingTechnician] = useState<Technician | null>(null);
+  const [formData, setFormData] = useState<TechnicianFormData>({
+    name: '',
+    email: '',
+    phone: '',
+    department: '',
+    location: '',
+    specialties: [],
+    maxCapacity: 10
+  });
 
+  // Form handlers
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      department: '',
+      location: '',
+      specialties: [],
+      maxCapacity: 10
+    });
+  };
+
+  const handleAddTechnician = () => {
+    setEditingTechnician(null);
+    resetForm();
+    setShowAddModal(true);
+  };
+
+  const handleEditTechnician = (technician: Technician) => {
+    setEditingTechnician(technician);
+    setFormData({
+      name: technician.name,
+      email: technician.email,
+      phone: technician.phone,
+      department: technician.department,
+      location: technician.location,
+      specialties: technician.specialties,
+      maxCapacity: technician.maxCapacity
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSubmitForm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.email || !formData.department) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      if (editingTechnician) {
+        await updateTechnicianMutation.mutateAsync({
+          id: editingTechnician.id,
+          data: formData
+        });
+        setShowEditModal(false);
+      } else {
+        await createTechnicianMutation.mutateAsync(formData);
+        setShowAddModal(false);
+      }
+      resetForm();
+    } catch (error) {
+      // Error handling is done in the mutation hooks
+    }
+  };
+
+  const handleDeleteTechnician = async (id: string, name: string) => {
+    if (window.confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) {
+      try {
+        await deleteTechnicianMutation.mutateAsync(id);
+      } catch (error) {
+        // Error handling is done in the mutation hook
+      }
+    }
+  };
+
+  const handleStatusChange = async (id: string, status: 'available' | 'busy' | 'offline') => {
+    try {
+      await updateStatusMutation.mutateAsync({ id, status });
+    } catch (error) {
+      // Error handling is done in the mutation hook
+    }
+  };
+
+  const handleSpecialtyChange = (specialty: string) => {
+    setFormData(prev => ({
+      ...prev,
+      specialties: prev.specialties.includes(specialty)
+        ? prev.specialties.filter(s => s !== specialty)
+        : [...prev.specialties, specialty]
+    }));
+  };
+
+  // Filtering logic
   const filteredTechnicians = technicians.filter(tech => {
     const matchesSearch = tech.name.toLowerCase().includes(search.toLowerCase()) ||
                          tech.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -179,14 +190,34 @@ export function Technicians() {
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Technicians</h1>
           <p className="text-gray-600 mt-1">Manage technician profiles and assignments</p>
+          {error && (
+            <p className="text-red-600 text-sm mt-1">
+              Failed to load technicians. Using offline data.
+            </p>
+          )}
         </div>
-        <button 
-          onClick={() => setShowAddModal(true)}
-          className="btn-primary"
-        >
-          <UserPlus className="h-4 w-4 mr-2" />
-          Add Technician
-        </button>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="btn-secondary"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+          <button 
+            onClick={handleAddTechnician}
+            disabled={createTechnicianMutation.isLoading}
+            className="btn-primary"
+          >
+            {createTechnicianMutation.isLoading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <UserPlus className="h-4 w-4 mr-2" />
+            )}
+            Add Technician
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -286,8 +317,17 @@ export function Technicians() {
         </div>
       </div>
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+          <span className="ml-2 text-gray-600">Loading technicians...</span>
+        </div>
+      )}
+
       {/* Technicians Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      {!isLoading && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredTechnicians.map((technician) => {
           const StatusIcon = statusIcons[technician.status];
           
@@ -305,13 +345,19 @@ export function Technicians() {
                 </div>
                 
                 <div className="flex items-center space-x-2">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColors[technician.status]}`}>
-                    <StatusIcon className="h-3 w-3 mr-1" />
-                    {technician.status}
-                  </span>
-                  <button className="p-1 rounded-full hover:bg-gray-100">
-                    <MoreVertical className="h-4 w-4 text-gray-400" />
-                  </button>
+                  <select
+                    value={technician.status}
+                    onChange={(e) => handleStatusChange(technician.id, e.target.value as any)}
+                    disabled={updateStatusMutation.isLoading}
+                    className={`text-xs font-medium border rounded-full px-2.5 py-0.5 ${statusColors[technician.status]} focus:ring-2 focus:ring-primary-500 focus:border-primary-500`}
+                  >
+                    <option value="available">Available</option>
+                    <option value="busy">Busy</option>
+                    <option value="offline">Offline</option>
+                  </select>
+                  {updateStatusMutation.isLoading && (
+                    <Loader2 className="h-3 w-3 animate-spin text-gray-400" />
+                  )}
                 </div>
               </div>
 
@@ -377,21 +423,38 @@ export function Technicians() {
 
               {/* Actions */}
               <div className="flex space-x-2 mt-4 pt-4 border-t border-gray-200">
-                <button className="flex-1 btn-secondary text-sm">
-                  <Edit className="h-4 w-4 mr-1" />
+                <button 
+                  onClick={() => handleEditTechnician(technician)}
+                  disabled={updateTechnicianMutation.isLoading}
+                  className="flex-1 btn-secondary text-sm"
+                >
+                  {updateTechnicianMutation.isLoading ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <Edit className="h-4 w-4 mr-1" />
+                  )}
                   Edit
                 </button>
-                <button className="btn-secondary text-sm px-3">
-                  <Trash2 className="h-4 w-4" />
+                <button 
+                  onClick={() => handleDeleteTechnician(technician.id, technician.name)}
+                  disabled={deleteTechnicianMutation.isLoading}
+                  className="btn-secondary text-sm px-3 text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  {deleteTechnicianMutation.isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* Empty State */}
-      {filteredTechnicians.length === 0 && (
+      {!isLoading && filteredTechnicians.length === 0 && (
         <div className="card">
           <div className="text-center py-8">
             <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -405,53 +468,164 @@ export function Technicians() {
         </div>
       )}
 
-      {/* Add Technician Modal */}
-      {showAddModal && (
+      {/* Add/Edit Technician Modal */}
+      {(showAddModal || showEditModal) && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Add New Technician</h3>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-md"
-              >
-                ×
-              </button>
-            </div>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Full Name"
-                className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
-              />
-              <input
-                type="email"
-                placeholder="Email Address"
-                className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
-              />
-              <input
-                type="tel"
-                placeholder="Phone Number"
-                className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
-              />
-              <select className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500">
-                <option value="">Select Department</option>
-                {departments.map(dept => (
-                  <option key={dept} value={dept}>{dept}</option>
-                ))}
-              </select>
-              <div className="flex justify-end space-x-3 pt-4">
+          <div className="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <form onSubmit={handleSubmitForm}>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-medium text-gray-900">
+                  {editingTechnician ? 'Edit Technician' : 'Add New Technician'}
+                </h3>
                 <button
-                  onClick={() => setShowAddModal(false)}
+                  type="button"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setShowEditModal(false);
+                    resetForm();
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-md"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Enter full name"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Enter email address"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Enter phone number"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Department *
+                  </label>
+                  <select 
+                    required
+                    value={formData.department}
+                    onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
+                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="">Select Department</option>
+                    <option value="IT Support">IT Support</option>
+                    <option value="Network Admin">Network Admin</option>
+                    <option value="Security">Security</option>
+                    <option value="Database">Database</option>
+                    <option value="DevOps">DevOps</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.location}
+                    onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Enter location"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Max Capacity
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={formData.maxCapacity}
+                    onChange={(e) => setFormData(prev => ({ ...prev, maxCapacity: parseInt(e.target.value) || 10 }))}
+                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
+                  />
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Specialties
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {['Hardware', 'Software', 'Network', 'Security', 'Database', 'Cloud', 'DevOps', 'Email', 'Server', 'Infrastructure', 'Windows', 'Linux'].map(specialty => (
+                    <label key={specialty} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.specialties.includes(specialty)}
+                        onChange={() => handleSpecialtyChange(specialty)}
+                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">{specialty}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setShowEditModal(false);
+                    resetForm();
+                  }}
                   className="btn-secondary"
                 >
                   Cancel
                 </button>
-                <button className="btn-primary">
-                  Add Technician
+                <button 
+                  type="submit"
+                  disabled={createTechnicianMutation.isLoading || updateTechnicianMutation.isLoading}
+                  className="btn-primary"
+                >
+                  {(createTechnicianMutation.isLoading || updateTechnicianMutation.isLoading) ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      {editingTechnician ? 'Updating...' : 'Adding...'}
+                    </>
+                  ) : (
+                    editingTechnician ? 'Update Technician' : 'Add Technician'
+                  )}
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}

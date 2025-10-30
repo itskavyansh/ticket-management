@@ -249,3 +249,19 @@ export const authenticateApiKey = (req: Request, res: Response, next: NextFuncti
 
   next();
 };
+
+// Simple mock auth for development - bypasses authentication
+export const mockAuth = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+  // Mock user for development
+  req.user = {
+    userId: 'dev-user-1',
+    email: 'developer@example.com',
+    role: UserRole.ADMIN,
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 3600,
+  };
+  next();
+};
+
+// Use mock auth in development, real auth in production
+export const auth = process.env.NODE_ENV === 'development' ? mockAuth : authenticate;

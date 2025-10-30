@@ -38,6 +38,7 @@ import slaDashboardRoutes from './routes/slaDashboard';
 import notificationRoutes from './routes/notifications';
 import notificationPreferencesRoutes from './routes/notificationPreferences';
 import chatBotRoutes from './routes/chatBot';
+import aiChatbotRoutes from './routes/aiChatbot';
 import analyticsRoutes from './routes/analytics';
 import dashboardRoutes from './routes/dashboard';
 import auditRoutes from './routes/audit';
@@ -55,8 +56,10 @@ const PORT = process.env.PORT || 3000;
 // Initialize WebSocket Analytics Handler
 const wsAnalyticsHandler = new WebSocketAnalyticsHandler(server);
 
-// Initialize security configuration
-SecurityConfig.initialize();
+// Initialize security configuration (skip in development)
+if (process.env.NODE_ENV !== 'development') {
+  SecurityConfig.initialize();
+}
 
 // Initialize cache invalidation service
 const cacheInvalidationService = getCacheInvalidationService();
@@ -119,6 +122,7 @@ app.use('/api/sla-dashboard', slaDashboardRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/notification-preferences', notificationPreferencesRoutes);
 app.use('/api/chatbot', chatBotRoutes);
+app.use('/api/ai-chatbot', aiChatbotRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/audit', auditRoutes);

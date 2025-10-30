@@ -1,17 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
-import axios from 'axios';
 import { Ticket, TicketFilters, TicketSortOptions, BulkOperation, TicketComment, TicketActivity } from '../types/ticket';
+import { apiService, TicketsResponse } from '../services/api';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-
-interface TicketsResponse {
-  tickets: Ticket[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
+// TicketsResponse is now imported from apiService
 
 interface UseTicketsOptions {
   page?: number;
@@ -26,39 +18,7 @@ export function useTickets(options: UseTicketsOptions = {}) {
 
   return useQuery<TicketsResponse>(
     ['tickets', { page, limit, filters, sort, search }],
-    async () => {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: limit.toString(),
-      });
-
-      if (search) {
-        params.append('search', search);
-      }
-
-      if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            if (Array.isArray(value)) {
-              value.forEach(v => params.append(`${key}[]`, v.toString()));
-            } else if (typeof value === 'object' && 'start' in value) {
-              params.append(`${key}[start]`, value.start);
-              params.append(`${key}[end]`, value.end);
-            } else {
-              params.append(key, value.toString());
-            }
-          }
-        });
-      }
-
-      if (sort) {
-        params.append('sortBy', sort.field);
-        params.append('sortOrder', sort.direction);
-      }
-
-      const response = await axios.get(`${API_BASE_URL}/tickets?${params}`);
-      return response.data;
-    },
+    () => apiService.getTickets({ page, limit, filters, sort, search }),
     {
       keepPreviousData: true,
       staleTime: 30000, // 30 seconds
@@ -69,10 +29,7 @@ export function useTickets(options: UseTicketsOptions = {}) {
 export function useTicket(ticketId: string) {
   return useQuery<Ticket>(
     ['ticket', ticketId],
-    async () => {
-      const response = await axios.get(`${API_BASE_URL}/tickets/${ticketId}`);
-      return response.data;
-    },
+    () => apiService.getTicket(ticketId),
     {
       enabled: !!ticketId,
     }
@@ -82,10 +39,7 @@ export function useTicket(ticketId: string) {
 export function useTicketComments(ticketId: string) {
   return useQuery<TicketComment[]>(
     ['ticket-comments', ticketId],
-    async () => {
-      const response = await axios.get(`${API_BASE_URL}/tickets/${ticketId}/comments`);
-      return response.data;
-    },
+    () => apiService.getTicketComments(ticketId),
     {
       enabled: !!ticketId,
     }
@@ -95,10 +49,7 @@ export function useTicketComments(ticketId: string) {
 export function useTicketActivity(ticketId: string) {
   return useQuery<TicketActivity[]>(
     ['ticket-activity', ticketId],
-    async () => {
-      const response = await axios.get(`${API_BASE_URL}/tickets/${ticketId}/activity`);
-      return response.data;
-    },
+    () => apiService.getTicketActivity(ticketId),
     {
       enabled: !!ticketId,
     }
@@ -109,10 +60,8 @@ export function useUpdateTicket() {
   const queryClient = useQueryClient();
 
   return useMutation(
-    async ({ ticketId, updates }: { ticketId: string; updates: Partial<Ticket> }) => {
-      const response = await axios.put(`${API_BASE_URL}/tickets/${ticketId}`, updates);
-      return response.data;
-    },
+    ({ ticketId, updates }: { ticketId: string; updates: Partial<Ticket> }) => 
+      apiService.updateTicket(ticketId, updates),
     {
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries(['tickets']);
@@ -126,10 +75,7 @@ export function useBulkUpdateTickets() {
   const queryClient = useQueryClient();
 
   return useMutation(
-    async (operation: BulkOperation) => {
-      const response = await axios.post(`${API_BASE_URL}/tickets/bulk`, operation);
-      return response.data;
-    },
+    (operation: BulkOperation) => apiService.bulkUpdateTickets(operation),
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['tickets']);
@@ -142,13 +88,8 @@ export function useAddComment() {
   const queryClient = useQueryClient();
 
   return useMutation(
-    async ({ ticketId, content, isInternal }: { ticketId: string; content: string; isInternal: boolean }) => {
-      const response = await axios.post(`${API_BASE_URL}/tickets/${ticketId}/comments`, {
-        content,
-        isInternal,
-      });
-      return response.data;
-    },
+    ({ ticketId, content, isInternal }: { ticketId: string; content: string; isInternal: boolean }) => 
+      apiService.addTicketComment(ticketId, content, isInternal),
     {
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries(['ticket-comments', variables.ticketId]);

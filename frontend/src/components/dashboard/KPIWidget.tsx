@@ -9,6 +9,7 @@ interface KPIWidgetProps {
 
 export function KPIWidget({ kpi, isLoading }: KPIWidgetProps) {
   const formatValue = (value: number | string, format?: string) => {
+    if (value === undefined || value === null) return '0';
     if (typeof value === 'string') return value;
     
     switch (format) {

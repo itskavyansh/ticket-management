@@ -6,7 +6,7 @@ import asyncio
 from datetime import datetime
 from typing import Dict, Any, List
 import logging
-from .clients.openai_client import OpenAIClient
+from .clients.gemini_client import GeminiClient
 from .cache.redis_cache import RedisCache
 from .services.triage_service import TriageService
 from .services.sla_prediction_service import SLAPredictionService
@@ -18,19 +18,19 @@ router = APIRouter()
 
 class HealthChecker:
     def __init__(self):
-        self.openai_client = OpenAIClient()
+        self.gemini_client = GeminiClient()
         self.redis_cache = RedisCache()
         self.triage_service = TriageService()
         self.sla_service = SLAPredictionService()
         self.resolution_service = ResolutionService()
         self.start_time = time.time()
 
-    async def check_openai_health(self) -> Dict[str, Any]:
-        """Check OpenAI API health"""
+    async def check_gemini_health(self) -> Dict[str, Any]:
+        """Check Gemini API health"""
         try:
             start_time = time.time()
             # Simple API call to check connectivity
-            models = await self.openai_client.list_models()
+            models = await self.gemini_client.list_models()
             response_time = (time.time() - start_time) * 1000
             
             return {
@@ -40,7 +40,7 @@ class HealthChecker:
                 "last_check": datetime.utcnow().isoformat()
             }
         except Exception as e:
-            logger.error(f"OpenAI health check failed: {e}")
+            logger.error(f"Gemini health check failed: {e}")
             return {
                 "status": "unhealthy",
                 "error": str(e),

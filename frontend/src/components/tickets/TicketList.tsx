@@ -15,8 +15,9 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { Ticket, TicketFilters, TicketSortOptions, Priority, TicketStatus, TicketCategory } from '../../types/ticket';
-import { useMockTickets } from '../../hooks/useTickets';
+import { useTickets } from '../../hooks/useTickets';
 import { formatDistanceToNow } from 'date-fns';
+import toast from 'react-hot-toast';
 
 interface TicketListProps {
   onTicketSelect?: (ticket: Ticket) => void;
@@ -66,7 +67,7 @@ export function TicketList({
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data, isLoading, error } = useMockTickets({ 
+  const { data, isLoading, error, refetch } = useTickets({ 
     page, 
     limit: 20, 
     search, 
@@ -117,7 +118,15 @@ export function TicketList({
         <div className="text-center py-8">
           <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading tickets</h3>
-          <p className="text-gray-500">Please try again later.</p>
+          <p className="text-gray-500 mb-4">
+            Failed to load tickets from server. Using offline data.
+          </p>
+          <button 
+            onClick={() => refetch()}
+            className="btn-primary"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );

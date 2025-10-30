@@ -1,11 +1,12 @@
-"""Ticket triage service using OpenAI GPT-4 for classification."""
+"""Ticket triage service using Gemini AI for classification."""
 import json
 import logging
 import time
 from typing import Dict, List, Optional
 import hashlib
+from datetime import datetime
 
-from clients.openai_client import openai_client
+from clients.gemini_client import gemini_client
 from cache.redis_cache import redis_cache
 from models.ticket_models import (
     TicketTriageRequest,
@@ -133,50 +134,161 @@ Respond with valid JSON only, no additional text. Use this exact structure:
         return f"triage:{hashlib.md5(content.encode()).hexdigest()}"
     
     async def _classify_with_ai(self, request: TicketTriageRequest) -> Dict:
-        """Use OpenAI to classify the ticket."""
-        # Build user prompt with ticket details
-        user_prompt = f"""
-Ticket Details:
-Title: {request.title}
-Description: {request.description}
-Customer Tier: {request.customer_tier or 'standard'}
-Affected Systems: {', '.join(request.affected_systems) if request.affected_systems else 'Not specified'}
-Error Messages: {', '.join(request.error_messages) if request.error_messages else 'None'}
-Reported By: {request.reported_by or 'Not specified'}
-
-Please classify this ticket according to the system instructions.
-"""
-        
-        messages = [
-            {"role": "system", "content": self.system_prompt},
-            {"role": "user", "content": user_prompt}
-        ]
-        
+        """Use Gemini AI to classify the ticket with enhanced accuracy."""
         try:
-            response = await openai_client.chat_completion(
-                messages=messages,
-                temperature=0.1,  # Low temperature for consistent classification
-                max_tokens=500
+            # First try Gemini API for classification
+            from clients.gemini_client import gemini_client
+            
+            result = await gemini_client.classify_ticket(
+                title=request.title,
+                description=request.description,
+                customer_tier=request.customer_tier or 'standard'
             )
             
-            # Parse the JSON response
-            content = response.choices[0].message.content.strip()
+            if result:
+                # Validate and enhance the result
+                result = self._validate_and_enhance_ai_result(result, request)
+                return result
             
-            # Remove any markdown formatting if present
-            if content.startswith("```json"):
-                content = content[7:]
-            if content.endswith("```"):
-                content = content[:-3]
-            
-            result = json.loads(content)
-            return result
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse AI response as JSON: {e}")
-            raise ValueError(f"Invalid AI response format: {e}")
         except Exception as e:
-            logger.error(f"AI classification failed: {e}")
-            raise
+            logger.warning(f"Gemini classification failed, using fallback: {str(e)}")
+        
+        # Fallback to rule-based classification with keyword analysis
+        return await self._fallback_classification(request)
+    
+    def _validate_and_enhance_ai_result(self, result: Dict, request: TicketTriageRequest) -> Dict:
+        """Validate and enhance AI classification result."""
+        # Ensure all required fields are present with defaults
+        defaults = {
+            "category": "other",
+            "urgency": "medium", 
+            "impact": "medium",
+            "confidence_score": 0.5,
+            "reasoning": "AI classification",
+            "suggested_technician_skills": [],
+            "estimated_resolution_time": 120
+        }
+        
+        for key, default_value in defaults.items():
+            if key not in result or result[key] is None:
+                result[key] = default_value
+        
+        # Validate enum values
+        valid_categories = ["hardware", "software", "network", "security", "email", "backup", "printer", "phone", "access", "other"]
+        if result["category"] not in valid_categories:
+            result["category"] = "other"
+            result["confidence_score"] *= 0.8  # Reduce confidence for invalid category
+        
+        valid_levels = ["low", "medium", "high", "urgent"]
+        if result["urgency"] not in valid_levels:
+            result["urgency"] = "medium"
+        if result["impact"] not in valid_levels:
+            result["impact"] = "medium"
+        
+        # Enhance with keyword-based confidence boost
+        confidence_boost = self._calculate_keyword_confidence(request, result["category"])
+        result["confidence_score"] = min(0.95, result["confidence_score"] + confidence_boost)
+        
+        # Add time-based urgency adjustment
+        if hasattr(request, 'created_at') and request.created_at:
+            hours_old = (datetime.utcnow() - request.created_at).total_seconds() / 3600
+            if hours_old > 24 and result["urgency"] == "low":
+                result["urgency"] = "medium"
+                result["reasoning"] += " (escalated due to age)"
+        
+        return result
+    
+    def _calculate_keyword_confidence(self, request: TicketTriageRequest, predicted_category: str) -> float:
+        """Calculate confidence boost based on keyword matching."""
+        text = f"{request.title} {request.description}".lower()
+        category_keywords = self.category_keywords.get(TicketCategory(predicted_category), [])
+        
+        matches = sum(1 for keyword in category_keywords if keyword.lower() in text)
+        if category_keywords:
+            match_ratio = matches / len(category_keywords)
+            return min(0.2, match_ratio * 0.3)  # Max boost of 0.2
+        
+        return 0.0
+    
+    async def _fallback_classification(self, request: TicketTriageRequest) -> Dict:
+        """Fallback rule-based classification when AI fails."""
+        text = f"{request.title} {request.description}".lower()
+        
+        # Category detection using keywords
+        category_scores = {}
+        for category, keywords in self.category_keywords.items():
+            score = sum(1 for keyword in keywords if keyword.lower() in text)
+            if score > 0:
+                category_scores[category.value] = score / len(keywords)
+        
+        # Select category with highest score
+        if category_scores:
+            category = max(category_scores, key=category_scores.get)
+            confidence = min(0.8, category_scores[category] * 2)
+        else:
+            category = "other"
+            confidence = 0.3
+        
+        # Determine urgency and impact based on keywords and customer tier
+        urgency = "medium"
+        impact = "medium"
+        
+        # High urgency indicators
+        urgent_keywords = ["urgent", "critical", "down", "outage", "emergency", "asap", "immediately"]
+        if any(keyword in text for keyword in urgent_keywords):
+            urgency = "urgent"
+            impact = "high"
+        
+        # Security issues are always high priority
+        if category == "security":
+            urgency = "urgent"
+            impact = "high"
+        
+        # Premium customers get priority boost
+        if request.customer_tier == "premium":
+            if urgency == "low":
+                urgency = "medium"
+            if impact == "low":
+                impact = "medium"
+        
+        # Estimate resolution time based on category and priority
+        base_times = {
+            "security": 60, "hardware": 180, "network": 120,
+            "software": 90, "email": 60, "other": 120
+        }
+        estimated_time = base_times.get(category, 120)
+        
+        if urgency == "urgent":
+            estimated_time = int(estimated_time * 0.5)
+        elif urgency == "low":
+            estimated_time = int(estimated_time * 1.5)
+        
+        return {
+            "category": category,
+            "urgency": urgency,
+            "impact": impact,
+            "confidence_score": confidence,
+            "reasoning": f"Rule-based classification using keyword analysis",
+            "suggested_technician_skills": self._get_skills_for_category(category),
+            "estimated_resolution_time": estimated_time
+        }
+    
+    def _get_skills_for_category(self, category: str) -> List[str]:
+        """Get suggested technician skills for a category."""
+        skill_mapping = {
+            "hardware": ["hardware_troubleshooting", "desktop_support", "server_maintenance"],
+            "software": ["software_support", "application_troubleshooting", "user_training"],
+            "network": ["network_administration", "cisco_networking", "firewall_management"],
+            "security": ["cybersecurity", "incident_response", "malware_removal"],
+            "email": ["exchange_administration", "email_troubleshooting", "office365"],
+            "backup": ["backup_administration", "data_recovery", "disaster_recovery"],
+            "printer": ["printer_support", "hardware_troubleshooting"],
+            "phone": ["voip_support", "pbx_administration", "telecommunications"],
+            "access": ["active_directory", "user_management", "authentication_systems"],
+            "other": ["general_support", "troubleshooting"]
+        }
+        
+        return skill_mapping.get(category, ["general_support"])
     
     def _calculate_priority(self, urgency: Urgency, impact: Impact) -> Priority:
         """Calculate priority based on urgency and impact matrix."""

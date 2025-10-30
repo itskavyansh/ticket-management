@@ -4,11 +4,13 @@ import { Plus } from 'lucide-react';
 import { TicketList } from '../components/tickets/TicketList';
 import { TicketDetail } from '../components/tickets/TicketDetail';
 import { BulkOperations } from '../components/tickets/BulkOperations';
+import { NewTicket } from '../components/tickets/NewTicket';
 import { Ticket } from '../types/ticket';
 
 export function Tickets() {
   const [selectedTickets, setSelectedTickets] = useState<string[]>([]);
   const [showBulkOperations, setShowBulkOperations] = useState(false);
+  const [showNewTicket, setShowNewTicket] = useState(false);
   const navigate = useNavigate();
 
   const handleTicketSelect = (ticket: Ticket) => {
@@ -22,7 +24,7 @@ export function Tickets() {
   const handleBulkOperationComplete = () => {
     setSelectedTickets([]);
     setShowBulkOperations(false);
-    // In a real app, you might want to refetch the tickets data here
+    // The react-query cache will be invalidated automatically by the mutation
   };
 
   return (
@@ -43,7 +45,10 @@ export function Tickets() {
                   Bulk Actions ({selectedTickets.length})
                 </button>
               )}
-              <button className="btn-primary">
+              <button 
+                onClick={() => setShowNewTicket(true)}
+                className="btn-primary"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 New Ticket
               </button>
@@ -62,6 +67,16 @@ export function Tickets() {
               selectedTickets={selectedTickets}
               onOperationComplete={handleBulkOperationComplete}
               onClose={() => setShowBulkOperations(false)}
+            />
+          )}
+
+          {showNewTicket && (
+            <NewTicket
+              onClose={() => setShowNewTicket(false)}
+              onTicketCreated={(ticketId) => {
+                setShowNewTicket(false);
+                navigate(`/tickets/${ticketId}`);
+              }}
             />
           )}
         </div>

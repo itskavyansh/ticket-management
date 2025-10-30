@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, X, Clock, User, Ticket } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface SearchResult {
   id: string;
@@ -88,6 +88,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -122,9 +123,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
       // Navigate to selected result
       const result = results[selectedIndex];
       onClose();
-      // Use React Router navigation instead of window.location
-      window.history.pushState({}, '', result.url);
-      window.dispatchEvent(new PopStateEvent('popstate'));
+      navigate(result.url);
     }
   };
 

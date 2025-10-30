@@ -4,7 +4,7 @@ import numpy as np
 from typing import List, Dict, Tuple, Optional
 import hashlib
 
-from clients.openai_client import openai_client
+from clients.gemini_client import gemini_client
 from cache.redis_cache import redis_cache
 from models.resolution_models import HistoricalTicket, SimilarityMatch
 
@@ -157,7 +157,7 @@ class EmbeddingService:
         
         try:
             # Create embedding using OpenAI
-            embedding = await openai_client.create_embedding(text, self.embedding_model)
+            embedding = await gemini_client.create_embedding(text, self.embedding_model)
             
             # Cache the embedding (embeddings don't change, so long TTL)
             await redis_cache.set(cache_key, embedding, ttl=86400)  # 24 hours

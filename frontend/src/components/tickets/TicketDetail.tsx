@@ -16,7 +16,9 @@ import {
   Star
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
+import toast from 'react-hot-toast';
 import { Ticket, TicketComment, TicketActivity } from '../../types/ticket';
+import { useTicket, useTicketComments, useTicketActivity, useAddComment } from '../../hooks/useTickets';
 
 // Mock data for development
 const mockTicket: Ticket = {
@@ -144,16 +146,22 @@ const statusColors = {
 };
 
 export function TicketDetail() {
-  const { ticketId: _ } = useParams<{ ticketId: string }>();
+  const { ticketId } = useParams<{ ticketId: string }>();
   const [activeTab, setActiveTab] = useState<'comments' | 'activity' | 'suggestions'>('comments');
   const [newComment, setNewComment] = useState('');
   const [isInternalComment, setIsInternalComment] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  // In a real app, you would fetch the ticket data using the ticketId
-  const ticket = mockTicket;
-  const comments = mockComments;
-  const activity = mockActivity;
+  // Fetch ticket data using hooks
+  const { data: ticket, isLoading: ticketLoading, error: ticketError } = useTicket(ticketId || '');
+  const { data: comments = [], isLoading: commentsLoading } = useTicketComments(ticketId || '');
+  const { data: activity = [], isLoading: activityLoading } = useTicketActivity(ticketId || '');
+  const addCommentMutation = useAddComment();
+
+  // Fallback to mock data if API fails or in development
+  const displayTicket = ticket || mockTicket;
+  const displayComments = comments.length > 0 ? comments : mockComments;
+  const displayActivity = activity.length > 0 ? activity : mockActivity;
 
   const getSLARiskColor = (riskScore: number) => {
     if (riskScore >= 0.8) return 'text-red-600';
@@ -167,12 +175,22 @@ export function TicketDetail() {
     return <CheckCircle className="h-5 w-5" />;
   };
 
-  const handleAddComment = () => {
-    if (!newComment.trim()) return;
+  const handleAddComment = async () => {
+    if (!newComment.trim() || !ticketId) return;
     
-    // In a real app, you would call the API to add the comment
-    console.log('Adding comment:', { content: newComment, isInternal: isInternalComment });
-    setNewComment('');
+    try {
+      await addCommentMutation.mutateAsync({
+        ticketId,
+        content: newComment,
+        isInternal: isInternalComment
+      });
+      setNewComment('');
+      setIsInternalComment(false);
+      toast.success('Comment added successfully');
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+      toast.error('Failed to add comment. Please try again.');
+    }
   };
 
   const formatFileSize = (bytes: number) => {
@@ -182,6 +200,90 @@ export function TicketDetail() {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
+
+  // Loading state
+  if (ticketLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center space-x-4">
+          <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+          <div className="space-y-2">
+            <div className="h-6 bg-gray-200 rounded w-64 animate-pulse"></div>
+            <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="card">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-4 animate-pulse"></div>
+              <div className="h-32 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          </div>
+          <div className="space-y-6">
+            <div className="card">
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-4 animate-pulse"></div>
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="h-3 bg-gray-200 rounded animate-pulse"></div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (ticketError) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center space-x-4">
+          <Link
+            to="/tickets"
+            className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Ticket Not Found</h1>
+            <p className="text-sm text-gray-500">The requested ticket could not be loaded</p>
+          </div>
+        </div>
+        <div className="card">
+          <div className="text-center py-8">
+            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading ticket</h3>
+            <p className="text-gray-500 mb-4">
+              {ticketError instanceof Error ? ticketError.message : 'An unexpected error occurred'}
+            </p>
+            <Link to="/tickets" className="btn-primary">
+              Back to Tickets
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!displayTicket) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center space-x-4">
+          <Link
+            to="/tickets"
+            className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Ticket Not Found</h1>
+            <p className="text-sm text-gray-500">The requested ticket does not exist</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -195,8 +297,8 @@ export function TicketDetail() {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">{ticket.title}</h1>
-            <p className="text-sm text-gray-500">Ticket #{ticket.externalId}</p>
+            <h1 className="text-2xl font-semibold text-gray-900">{displayTicket.title}</h1>
+            <p className="text-sm text-gray-500">Ticket #{displayTicket.externalId}</p>
           </div>
         </div>
         
@@ -221,31 +323,31 @@ export function TicketDetail() {
           <div className="card">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center space-x-2">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${priorityColors[ticket.priority]}`}>
-                  {ticket.priority}
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${priorityColors[displayTicket.priority]}`}>
+                  {displayTicket.priority}
                 </span>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColors[ticket.status]}`}>
-                  {ticket.status.replace('_', ' ')}
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColors[displayTicket.status]}`}>
+                  {displayTicket.status.replace('_', ' ')}
                 </span>
               </div>
               
-              <div className={`flex items-center ${getSLARiskColor(ticket.aiInsights.slaRiskScore)}`}>
-                {getSLARiskIcon(ticket.aiInsights.slaRiskScore)}
+              <div className={`flex items-center ${getSLARiskColor(displayTicket.aiInsights.slaRiskScore)}`}>
+                {getSLARiskIcon(displayTicket.aiInsights.slaRiskScore)}
                 <span className="ml-2 text-sm font-medium">
-                  SLA Risk: {Math.round(ticket.aiInsights.slaRiskScore * 100)}%
+                  SLA Risk: {Math.round(displayTicket.aiInsights.slaRiskScore * 100)}%
                 </span>
               </div>
             </div>
             
             <div className="prose max-w-none">
-              <p className="text-gray-700 leading-relaxed">{ticket.description}</p>
+              <p className="text-gray-700 leading-relaxed">{displayTicket.description}</p>
             </div>
             
-            {ticket.attachments.length > 0 && (
+            {displayTicket.attachments.length > 0 && (
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <h4 className="text-sm font-medium text-gray-900 mb-2">Attachments</h4>
                 <div className="space-y-2">
-                  {ticket.attachments.map((attachment) => (
+                  {displayTicket.attachments.map((attachment) => (
                     <div key={attachment.id} className="flex items-center space-x-2 p-2 bg-gray-50 rounded-md">
                       <Paperclip className="h-4 w-4 text-gray-400" />
                       <span className="text-sm text-gray-900">{attachment.filename}</span>
@@ -256,11 +358,11 @@ export function TicketDetail() {
               </div>
             )}
             
-            {ticket.tags.length > 0 && (
+            {displayTicket.tags.length > 0 && (
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="flex items-center gap-2">
                   <Tag className="h-4 w-4 text-gray-400" />
-                  {ticket.tags.map((tag) => (
+                  {displayTicket.tags.map((tag) => (
                     <span
                       key={tag}
                       className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800"
@@ -286,7 +388,7 @@ export function TicketDetail() {
                   }`}
                 >
                   <MessageSquare className="h-4 w-4 inline mr-2" />
-                  Comments ({comments.length})
+                  Comments ({displayComments.length})
                 </button>
                 <button
                   onClick={() => setActiveTab('activity')}
@@ -297,7 +399,7 @@ export function TicketDetail() {
                   }`}
                 >
                   <Clock className="h-4 w-4 inline mr-2" />
-                  Activity ({activity.length})
+                  Activity ({displayActivity.length})
                 </button>
                 <button
                   onClick={() => setActiveTab('suggestions')}
@@ -308,7 +410,7 @@ export function TicketDetail() {
                   }`}
                 >
                   <Star className="h-4 w-4 inline mr-2" />
-                  AI Suggestions ({ticket.aiInsights.resolutionSuggestions.length})
+                  AI Suggestions ({displayTicket.aiInsights.resolutionSuggestions.length})
                 </button>
               </nav>
             </div>
@@ -318,7 +420,20 @@ export function TicketDetail() {
                 <div className="space-y-6">
                   {/* Comments List */}
                   <div className="space-y-4">
-                    {comments.map((comment) => (
+                    {commentsLoading ? (
+                      <div className="space-y-4">
+                        {[1, 2, 3].map(i => (
+                          <div key={i} className="flex space-x-3 animate-pulse">
+                            <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                            <div className="flex-1">
+                              <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+                              <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      displayComments.map((comment) => (
                       <div key={comment.id} className="flex space-x-3">
                         <div className="flex-shrink-0">
                           <div className="h-8 w-8 rounded-full bg-primary-600 flex items-center justify-center">
@@ -343,7 +458,8 @@ export function TicketDetail() {
                           </div>
                         </div>
                       </div>
-                    ))}
+                      ))
+                    )}
                   </div>
 
                   {/* Add Comment */}
@@ -374,11 +490,11 @@ export function TicketDetail() {
                           </label>
                           <button
                             onClick={handleAddComment}
-                            disabled={!newComment.trim()}
+                            disabled={!newComment.trim() || addCommentMutation.isLoading}
                             className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <Send className="h-4 w-4 mr-2" />
-                            Add Comment
+                            {addCommentMutation.isLoading ? 'Adding...' : 'Add Comment'}
                           </button>
                         </div>
                       </div>
@@ -389,7 +505,20 @@ export function TicketDetail() {
 
               {activeTab === 'activity' && (
                 <div className="space-y-4">
-                  {activity.map((item) => (
+                  {activityLoading ? (
+                    <div className="space-y-4">
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="flex space-x-3 animate-pulse">
+                          <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                          <div className="flex-1">
+                            <div className="h-4 bg-gray-200 rounded w-2/3 mb-1"></div>
+                            <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    displayActivity.map((item) => (
                     <div key={item.id} className="flex space-x-3">
                       <div className="flex-shrink-0">
                         <div className="h-8 w-8 rounded-full bg-gray-400 flex items-center justify-center">
@@ -403,13 +532,14 @@ export function TicketDetail() {
                         </p>
                       </div>
                     </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               )}
 
               {activeTab === 'suggestions' && (
                 <div className="space-y-4">
-                  {ticket.aiInsights.resolutionSuggestions.map((suggestion) => (
+                  {displayTicket.aiInsights.resolutionSuggestions.map((suggestion) => (
                     <div key={suggestion.id} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -444,35 +574,35 @@ export function TicketDetail() {
             <dl className="space-y-3">
               <div>
                 <dt className="text-sm font-medium text-gray-500">Customer</dt>
-                <dd className="text-sm text-gray-900">{ticket.customerName}</dd>
+                <dd className="text-sm text-gray-900">{displayTicket.customerName}</dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Assigned Technician</dt>
-                <dd className="text-sm text-gray-900">{ticket.assignedTechnicianName || 'Unassigned'}</dd>
+                <dd className="text-sm text-gray-900">{displayTicket.assignedTechnicianName || 'Unassigned'}</dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Created</dt>
                 <dd className="text-sm text-gray-900">
-                  {format(new Date(ticket.createdAt), 'MMM d, yyyy h:mm a')}
+                  {format(new Date(displayTicket.createdAt), 'MMM d, yyyy h:mm a')}
                 </dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Last Updated</dt>
                 <dd className="text-sm text-gray-900">
-                  {format(new Date(ticket.updatedAt), 'MMM d, yyyy h:mm a')}
+                  {format(new Date(displayTicket.updatedAt), 'MMM d, yyyy h:mm a')}
                 </dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">SLA Deadline</dt>
                 <dd className="text-sm text-gray-900">
-                  {format(new Date(ticket.slaDeadline), 'MMM d, yyyy h:mm a')}
+                  {format(new Date(displayTicket.slaDeadline), 'MMM d, yyyy h:mm a')}
                 </dd>
               </div>
-              {ticket.estimatedResolutionTime && (
+              {displayTicket.estimatedResolutionTime && (
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Estimated Resolution</dt>
                   <dd className="text-sm text-gray-900">
-                    {Math.round(ticket.estimatedResolutionTime / 60)} hours
+                    {Math.round(displayTicket.estimatedResolutionTime / 60)} hours
                   </dd>
                 </div>
               )}

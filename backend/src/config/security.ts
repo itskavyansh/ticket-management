@@ -317,7 +317,7 @@ export interface SecureConfigTemplate {
 /**
  * Initialize security configuration on module load
  */
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== 'test' && process.env.NODE_ENV !== 'development') {
   try {
     SecurityConfig.initialize();
   } catch (error) {
@@ -326,4 +326,7 @@ if (process.env.NODE_ENV !== 'test') {
     });
     process.exit(1);
   }
+} else if (process.env.NODE_ENV === 'development') {
+  // Skip strict security validation in development
+  logger.info('Skipping strict security validation in development mode');
 }

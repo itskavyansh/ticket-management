@@ -8,6 +8,8 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { BulkOperation, TicketStatus, Priority } from '../../types/ticket';
+import { useBulkUpdateTickets } from '../../hooks/useTickets';
+import toast from 'react-hot-toast';
 
 interface BulkOperationsProps {
   selectedTickets: string[];
@@ -34,7 +36,7 @@ const mockTechnicians: Technician[] = [
 
 export function BulkOperations({ selectedTickets, onOperationComplete, onClose }: BulkOperationsProps) {
   const [activeOperation, setActiveOperation] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const bulkUpdateMutation = useBulkUpdateTickets();
   
   // Form states for different operations
   const [assignTechnician, setAssignTechnician] = useState('');
@@ -44,21 +46,24 @@ export function BulkOperations({ selectedTickets, onOperationComplete, onClose }
   const [tagsToRemove, setTagsToRemove] = useState('');
 
   const handleOperation = async (operation: BulkOperation) => {
-    setIsProcessing(true);
-    
     try {
-      // In a real app, you would call the API here
-      console.log('Executing bulk operation:', operation);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await bulkUpdateMutation.mutateAsync(operation);
       onOperationComplete();
       setActiveOperation(null);
+      
+      // Show success message based on operation type
+      const operationNames = {
+        assign: 'assigned',
+        status_change: 'status updated',
+        priority_change: 'priority updated',
+        add_tags: 'tags added',
+        remove_tags: 'tags removed'
+      };
+      
+      toast.success(`Successfully ${operationNames[operation.type]} for ${selectedTickets.length} ticket${selectedTickets.length > 1 ? 's' : ''}`);
     } catch (error) {
       console.error('Bulk operation failed:', error);
-    } finally {
-      setIsProcessing(false);
+      toast.error('Bulk operation failed. Please try again.');
     }
   };
 
@@ -234,10 +239,10 @@ export function BulkOperations({ selectedTickets, onOperationComplete, onClose }
                     </button>
                     <button
                       onClick={handleAssignTickets}
-                      disabled={!assignTechnician || isProcessing}
+                      disabled={!assignTechnician || bulkUpdateMutation.isLoading}
                       className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isProcessing ? 'Assigning...' : 'Assign Tickets'}
+                      {bulkUpdateMutation.isLoading ? 'Assigning...' : 'Assign Tickets'}
                     </button>
                   </div>
                 </div>
@@ -281,10 +286,10 @@ export function BulkOperations({ selectedTickets, onOperationComplete, onClose }
                     </button>
                     <button
                       onClick={handleStatusChange}
-                      disabled={isProcessing}
+                      disabled={bulkUpdateMutation.isLoading}
                       className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isProcessing ? 'Updating...' : 'Update Status'}
+                      {bulkUpdateMutation.isLoading ? 'Updating...' : 'Update Status'}
                     </button>
                   </div>
                 </div>
@@ -326,10 +331,10 @@ export function BulkOperations({ selectedTickets, onOperationComplete, onClose }
                     </button>
                     <button
                       onClick={handlePriorityChange}
-                      disabled={isProcessing}
+                      disabled={bulkUpdateMutation.isLoading}
                       className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isProcessing ? 'Updating...' : 'Update Priority'}
+                      {bulkUpdateMutation.isLoading ? 'Updating...' : 'Update Priority'}
                     </button>
                   </div>
                 </div>
@@ -371,10 +376,10 @@ export function BulkOperations({ selectedTickets, onOperationComplete, onClose }
                     </button>
                     <button
                       onClick={handleAddTags}
-                      disabled={!tagsToAdd.trim() || isProcessing}
+                      disabled={!tagsToAdd.trim() || bulkUpdateMutation.isLoading}
                       className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isProcessing ? 'Adding...' : 'Add Tags'}
+                      {bulkUpdateMutation.isLoading ? 'Adding...' : 'Add Tags'}
                     </button>
                   </div>
                 </div>
@@ -416,10 +421,10 @@ export function BulkOperations({ selectedTickets, onOperationComplete, onClose }
                     </button>
                     <button
                       onClick={handleRemoveTags}
-                      disabled={!tagsToRemove.trim() || isProcessing}
+                      disabled={!tagsToRemove.trim() || bulkUpdateMutation.isLoading}
                       className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isProcessing ? 'Removing...' : 'Remove Tags'}
+                      {bulkUpdateMutation.isLoading ? 'Removing...' : 'Remove Tags'}
                     </button>
                   </div>
                 </div>

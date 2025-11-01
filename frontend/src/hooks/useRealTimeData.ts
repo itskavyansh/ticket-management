@@ -2,10 +2,10 @@ import { useEffect, useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
 import { io, Socket } from 'socket.io-client';
 import { PerformanceMetrics, SLAAlert, RealTimeUpdate } from '../types/analytics';
-import { mockApiService } from '../services/mockApi';
+import { apiService } from '../services/api';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'ws://localhost:3001';
-const USE_MOCK_API = import.meta.env.DEV;
+
 
 export function useRealTimeData() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -70,17 +70,7 @@ export function useRealTimeData() {
 export function useDashboardMetrics() {
   return useQuery<PerformanceMetrics>(
     ['dashboard-metrics'],
-    async () => {
-      if (USE_MOCK_API) {
-        return mockApiService.getDashboardMetrics();
-      }
-      
-      const response = await fetch('/api/analytics/dashboard');
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard metrics');
-      }
-      return response.json();
-    },
+    () => apiService.getDashboardMetrics(),
     {
       refetchInterval: 30000, // Refetch every 30 seconds as fallback
       staleTime: 10000, // Consider data stale after 10 seconds
@@ -91,17 +81,7 @@ export function useDashboardMetrics() {
 export function useSLAAlerts() {
   return useQuery<SLAAlert[]>(
     ['sla-alerts'],
-    async () => {
-      if (USE_MOCK_API) {
-        return mockApiService.getSLAAlerts();
-      }
-      
-      const response = await fetch('/api/analytics/sla-alerts');
-      if (!response.ok) {
-        throw new Error('Failed to fetch SLA alerts');
-      }
-      return response.json();
-    },
+    () => apiService.getSLAAlerts(),
     {
       refetchInterval: 15000, // Refetch every 15 seconds
       staleTime: 5000,
@@ -112,17 +92,7 @@ export function useSLAAlerts() {
 export function useTicketTrends(timeRange: string = '7d') {
   return useQuery(
     ['ticket-trends', timeRange],
-    async () => {
-      if (USE_MOCK_API) {
-        return mockApiService.getTicketTrends(timeRange);
-      }
-      
-      const response = await fetch(`/api/analytics/trends?range=${timeRange}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch ticket trends');
-      }
-      return response.json();
-    },
+    () => apiService.getTicketTrends(timeRange),
     {
       refetchInterval: 60000, // Refetch every minute
       staleTime: 30000,

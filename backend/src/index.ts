@@ -14,6 +14,8 @@ import { initializeRedis, closeRedis } from './config/redis';
 import { mongoConnection } from './config/mongodb';
 import { getCacheInvalidationService } from './services/CacheInvalidationService';
 import { getQueueManagementService } from './services/QueueManagementService';
+import { dataStorageService } from './services/DataStorageService';
+import { checkAWSHealth } from './config/aws';
 import { 
   enforceHTTPS, 
   securityHeaders, 
@@ -44,6 +46,7 @@ import dashboardRoutes from './routes/dashboard';
 import auditRoutes from './routes/audit';
 import securityRoutes from './routes/security';
 import aiRoutes from './routes/ai';
+import storageRoutes from './routes/storage';
 import { threatDetectionMiddleware, authThreatDetectionMiddleware } from './middleware/threatDetection';
 
 // Load environment variables
@@ -92,12 +95,27 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
+app.get('/health', async (req, res) => {
+  try {
+    const awsHealth = await checkAWSHealth();
+    const storageHealth = await dataStorageService.healthCheck();
+    
+    res.status(200).json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      services: {
+        aws: awsHealth,
+        storage: storageHealth
+      }
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      error: (error as Error).message
+    });
+  }
 });
 
 // API routes
@@ -128,6 +146,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/security', securityRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/storage', storageRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
@@ -167,6 +186,10 @@ async function startServer() {
       removeOnFail: 20
     });
     logger.info('Queue management initialized');
+
+    // Initialize data storage service
+    await dataStorageService.initialize();
+    logger.info('Data storage service initialized');
 
     server.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);

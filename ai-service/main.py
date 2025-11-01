@@ -18,12 +18,42 @@ except ImportError:
     cache = mock_cache
 from middleware.rate_limiter import rate_limit_middleware
 
-# Configure logging
+# Configure logging first
 logging.basicConfig(
-    level=logging.INFO if not settings.debug else logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+# Import AI services (with fallbacks for missing dependencies)
+try:
+    from services.advanced_analytics import advanced_analytics_service
+    from services.tensorflow_models import workload_forecasting_model, ticket_classification_model
+    TENSORFLOW_AVAILABLE = True
+    logger.info("TensorFlow services loaded successfully")
+except ImportError as e:
+    logger.warning(f"TensorFlow services not available: {str(e)}")
+    TENSORFLOW_AVAILABLE = False
+    # Create mock services
+    class MockService:
+        async def predict_workload_trends(self, *args, **kwargs):
+            return {"success": False, "error": "TensorFlow not available - install with: python install_ml_dependencies.py"}
+        async def analyze_ticket_patterns(self, *args, **kwargs):
+            return {"success": False, "error": "TensorFlow not available - install with: python install_ml_dependencies.py"}
+        async def predict_sla_risks(self, *args, **kwargs):
+            return {"success": False, "error": "TensorFlow not available - install with: python install_ml_dependencies.py"}
+        async def optimize_technician_assignments(self, *args, **kwargs):
+            return {"success": False, "error": "TensorFlow not available - install with: python install_ml_dependencies.py"}
+        async def classify_ticket(self, *args, **kwargs):
+            return {"success": False, "error": "TensorFlow not available - install with: python install_ml_dependencies.py"}
+    
+    advanced_analytics_service = MockService()
+    workload_forecasting_model = MockService()
+    ticket_classification_model = MockService()
+
+# Update logging level based on settings
+if hasattr(settings, 'debug') and settings.debug:
+    logging.getLogger().setLevel(logging.DEBUG)
 
 
 @asynccontextmanager
@@ -982,3 +1012,342 @@ if __name__ == "__main__":
         reload=settings.debug,
         log_level="info" if not settings.debug else "debug"
     )
+# TensorFlow-based ML endpoints
+@app.post("/ai/predict-workload-trends")
+async def predict_workload_trends(request: Request):
+    """
+    Advanced workload trend prediction using TensorFlow LSTM models.
+    
+    This endpoint uses deep learning to provide:
+    - Time series forecasting with LSTM neural networks
+    - Multi-step ahead predictions with confidence intervals
+    - Seasonal pattern recognition and trend analysis
+    - Capacity planning recommendations with ML insights
+    - Resource optimization using predictive analytics
+    """
+    start_time = time.time()
+    
+    try:
+        request_data = await request.json()
+        logger.info("Processing TensorFlow-based workload trend prediction")
+        
+        historical_data = request_data.get('historical_data', [])
+        forecast_period = request_data.get('forecast_period', '24h')
+        
+        if not historical_data:
+            processing_time = int((time.time() - start_time) * 1000)
+            return {
+                "success": False,
+                "error": "Historical data is required for trend prediction",
+                "processing_time_ms": processing_time
+            }
+        
+        # Use advanced analytics service with TensorFlow models
+        result = await advanced_analytics_service.predict_workload_trends(
+            historical_data, forecast_period
+        )
+        
+        processing_time = int((time.time() - start_time) * 1000)
+        result["processing_time_ms"] = processing_time
+        
+        logger.info(f"TensorFlow workload prediction completed in {processing_time}ms")
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"TensorFlow workload prediction failed: {str(e)}")
+        processing_time = int((time.time() - start_time) * 1000)
+        
+        return {
+            "success": False,
+            "error": "TensorFlow prediction service temporarily unavailable",
+            "processing_time_ms": processing_time,
+            "fallback_available": True
+        }
+
+@app.post("/ai/analyze-ticket-patterns")
+async def analyze_ticket_patterns(request: Request):
+    """
+    Advanced ticket pattern analysis using machine learning.
+    
+    This endpoint provides comprehensive analysis including:
+    - Deep learning-based classification pattern analysis
+    - Temporal pattern recognition with statistical modeling
+    - Priority and SLA performance analytics
+    - Resolution efficiency analysis with ML insights
+    - Predictive insights for process optimization
+    """
+    start_time = time.time()
+    
+    try:
+        request_data = await request.json()
+        logger.info("Processing advanced ticket pattern analysis")
+        
+        tickets = request_data.get('tickets', [])
+        analysis_type = request_data.get('analysis_type', 'comprehensive')
+        
+        if not tickets:
+            processing_time = int((time.time() - start_time) * 1000)
+            return {
+                "success": False,
+                "error": "Ticket data is required for pattern analysis",
+                "processing_time_ms": processing_time
+            }
+        
+        # Perform advanced pattern analysis
+        result = await advanced_analytics_service.analyze_ticket_patterns(
+            tickets, analysis_type
+        )
+        
+        processing_time = int((time.time() - start_time) * 1000)
+        result["processing_time_ms"] = processing_time
+        
+        logger.info(f"Ticket pattern analysis completed in {processing_time}ms "
+                   f"(analyzed {len(tickets)} tickets)")
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Ticket pattern analysis failed: {str(e)}")
+        processing_time = int((time.time() - start_time) * 1000)
+        
+        return {
+            "success": False,
+            "error": "Pattern analysis service temporarily unavailable",
+            "processing_time_ms": processing_time
+        }
+
+@app.post("/ai/predict-sla-risks-advanced")
+async def predict_sla_risks_advanced(request: Request):
+    """
+    Advanced SLA risk prediction using ensemble ML models.
+    
+    This endpoint combines multiple machine learning approaches:
+    - Ensemble modeling with multiple risk assessment algorithms
+    - Feature engineering with temporal and contextual factors
+    - Risk factor decomposition and contribution analysis
+    - Predictive breach time estimation with confidence intervals
+    - Actionable recommendations based on risk patterns
+    """
+    start_time = time.time()
+    
+    try:
+        request_data = await request.json()
+        logger.info("Processing advanced SLA risk prediction")
+        
+        active_tickets = request_data.get('active_tickets', [])
+        risk_threshold = request_data.get('risk_threshold', 0.7)
+        
+        if not active_tickets:
+            processing_time = int((time.time() - start_time) * 1000)
+            return {
+                "success": False,
+                "error": "Active ticket data is required for risk prediction",
+                "processing_time_ms": processing_time
+            }
+        
+        # Perform advanced SLA risk prediction
+        result = await advanced_analytics_service.predict_sla_risks(
+            active_tickets, risk_threshold
+        )
+        
+        processing_time = int((time.time() - start_time) * 1000)
+        result["processing_time_ms"] = processing_time
+        
+        logger.info(f"Advanced SLA risk prediction completed in {processing_time}ms "
+                   f"(analyzed {len(active_tickets)} tickets)")
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Advanced SLA risk prediction failed: {str(e)}")
+        processing_time = int((time.time() - start_time) * 1000)
+        
+        return {
+            "success": False,
+            "error": "Advanced SLA prediction service temporarily unavailable",
+            "processing_time_ms": processing_time
+        }
+
+@app.post("/ai/classify-ticket-advanced")
+async def classify_ticket_advanced(request: Request):
+    """
+    Advanced ticket classification using TensorFlow deep learning models.
+    
+    This endpoint provides enhanced classification with:
+    - Convolutional Neural Network (CNN) for text analysis
+    - Multi-class probability distribution for all categories
+    - Confidence scoring with uncertainty quantification
+    - Feature importance analysis for classification decisions
+    - Fallback mechanisms for robust operation
+    """
+    start_time = time.time()
+    
+    try:
+        request_data = await request.json()
+        logger.info("Processing TensorFlow-based ticket classification")
+        
+        title = request_data.get('title', '')
+        description = request_data.get('description', '')
+        additional_features = request_data.get('additional_features', {})
+        
+        if not title and not description:
+            processing_time = int((time.time() - start_time) * 1000)
+            return {
+                "success": False,
+                "error": "Title or description is required for classification",
+                "processing_time_ms": processing_time
+            }
+        
+        # Use TensorFlow model for classification
+        result = await ticket_classification_model.classify_ticket(
+            title, description, additional_features
+        )
+        
+        processing_time = int((time.time() - start_time) * 1000)
+        result["processing_time_ms"] = processing_time
+        
+        logger.info(f"TensorFlow classification completed in {processing_time}ms "
+                   f"(category: {result.get('predicted_category', 'unknown')}, "
+                   f"confidence: {result.get('confidence_score', 0):.2f})")
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"TensorFlow classification failed: {str(e)}")
+        processing_time = int((time.time() - start_time) * 1000)
+        
+        return {
+            "success": False,
+            "error": "TensorFlow classification service temporarily unavailable",
+            "processing_time_ms": processing_time,
+            "fallback_available": True
+        }
+
+@app.post("/ai/optimize-assignments-ml")
+async def optimize_assignments_ml(request: Request):
+    """
+    ML-enhanced technician assignment optimization.
+    
+    This endpoint uses machine learning for optimal assignments:
+    - Multi-objective optimization with ML scoring
+    - Skill-based matching with confidence weighting
+    - Workload balancing using predictive models
+    - Performance history integration for better decisions
+    - Real-time optimization with dynamic re-assignment suggestions
+    """
+    start_time = time.time()
+    
+    try:
+        request_data = await request.json()
+        logger.info("Processing ML-enhanced assignment optimization")
+        
+        technicians = request_data.get('technicians', [])
+        pending_tickets = request_data.get('pending_tickets', [])
+        optimization_strategy = request_data.get('optimization_strategy', 'ml_enhanced')
+        
+        if not technicians or not pending_tickets:
+            processing_time = int((time.time() - start_time) * 1000)
+            return {
+                "success": False,
+                "error": "Both technicians and pending tickets are required",
+                "processing_time_ms": processing_time
+            }
+        
+        # Perform ML-enhanced optimization
+        result = await advanced_analytics_service.optimize_technician_assignments(
+            technicians, pending_tickets, optimization_strategy
+        )
+        
+        processing_time = int((time.time() - start_time) * 1000)
+        result["processing_time_ms"] = processing_time
+        
+        logger.info(f"ML assignment optimization completed in {processing_time}ms "
+                   f"(assignments: {result.get('total_assignments', 0)}, "
+                   f"score: {result.get('optimization_score', 0):.2f})")
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"ML assignment optimization failed: {str(e)}")
+        processing_time = int((time.time() - start_time) * 1000)
+        
+        return {
+            "success": False,
+            "error": "ML optimization service temporarily unavailable",
+            "processing_time_ms": processing_time,
+            "fallback_available": True
+        }
+
+@app.get("/ai/model-status")
+async def get_model_status():
+    """
+    Get status of all AI/ML models.
+    
+    This endpoint provides comprehensive model status including:
+    - TensorFlow model availability and health
+    - Training status and performance metrics
+    - Model versions and last update timestamps
+    - Resource utilization and performance statistics
+    - Fallback mechanism status
+    """
+    try:
+        # Check TensorFlow models
+        workload_model_status = {
+            "name": "workload_forecasting",
+            "type": "tensorflow_lstm",
+            "is_trained": workload_forecasting_model.is_trained,
+            "model_version": workload_forecasting_model.model_version,
+            "available": workload_forecasting_model.model is not None
+        }
+        
+        classification_model_status = {
+            "name": "ticket_classification",
+            "type": "tensorflow_cnn",
+            "is_trained": ticket_classification_model.is_trained,
+            "available": ticket_classification_model.model is not None
+        }
+        
+        # Check Gemini client
+        gemini_status = {
+            "name": "gemini_llm",
+            "type": "large_language_model",
+            "available": await gemini_client.health_check()
+        }
+        
+        # Overall system status
+        models_available = sum([
+            workload_model_status["available"],
+            classification_model_status["available"],
+            gemini_status["available"]
+        ])
+        
+        system_status = "healthy" if models_available >= 2 else "degraded" if models_available >= 1 else "limited"
+        
+        return {
+            "success": True,
+            "system_status": system_status,
+            "models_available": models_available,
+            "total_models": 3,
+            "models": {
+                "tensorflow_workload": workload_model_status,
+                "tensorflow_classification": classification_model_status,
+                "gemini_llm": gemini_status
+            },
+            "capabilities": {
+                "workload_forecasting": workload_model_status["available"],
+                "advanced_classification": classification_model_status["available"],
+                "natural_language_processing": gemini_status["available"],
+                "pattern_analysis": True,  # Always available with fallbacks
+                "sla_prediction": True     # Always available with fallbacks
+            },
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Model status check failed: {str(e)}")
+        return {
+            "success": False,
+            "error": "Unable to check model status",
+            "system_status": "unknown"
+        }

@@ -1,4 +1,6 @@
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { docClient, dynamoConfig } from '../../config/aws';
+import { logger } from '../../utils/logger';
 
 /**
  * DynamoDB client wrapper
@@ -7,13 +9,9 @@ class DynamoDBClient {
   private documentClient: DocumentClient;
 
   constructor() {
-    // Initialize with mock configuration for testing
-    this.documentClient = new DocumentClient({
-      region: process.env.AWS_REGION || 'us-east-1',
-      endpoint: process.env.DYNAMODB_ENDPOINT || undefined,
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'test',
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'test'
-    });
+    // Use the configured AWS client
+    this.documentClient = docClient;
+    logger.info('DynamoDB client initialized');
   }
 
   getDocumentClient(): DocumentClient {

@@ -32,4 +32,8 @@ const departments = [
 const locations = [
   'Bangalore Office',
   'Mumbai Office',
-  'Del
+  'Delhi Office',
+  'Pune Office',
+  'Chennai Office',
+  'Hyderabad Office'
+];

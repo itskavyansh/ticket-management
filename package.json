@@ -5,7 +5,6 @@
   "scripts": {
     "start": "python run.py",
     "dev": "python run.py",
-    "setup": "python test_setup.py",
     "install-all": "cd backend && npm install && cd ../frontend && npm install && cd ../ai-service && pip install -r requirements.txt",
     "clean": "rm -rf backend/node_modules frontend/node_modules ai-service/__pycache__"
   },

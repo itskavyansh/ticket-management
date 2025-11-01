@@ -10,3 +10,12 @@ pytest==7.4.3
 pytest-asyncio==0.21.1
 httpx==0.25.2
 psutil==5.9.6
+# Basic ML libraries (no compilation required)
+numpy==1.24.3
+# Optional ML libraries (install separately if needed)
+# scikit-learn==1.3.2  # Requires Visual C++ Build Tools on Windows
+# pandas==2.0.3        # Heavy dependency
+# tensorflow==2.15.0   # Requires specific setup
+# keras==2.15.0        # Requires TensorFlow
+# matplotlib==3.7.2    # Heavy dependency
+# seaborn==0.12.2      # Requires matplotlib

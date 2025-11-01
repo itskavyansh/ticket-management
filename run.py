@@ -162,7 +162,7 @@ def main():
         # Start services in separate threads with dynamic ports
         services = [
             {
-                "command": f"python simple_main.py --port {ports['ai_service']}" if ports['ai_service'] != 8001 else "python simple_main.py",
+                "command": f"python main.py --port {ports['ai_service']}" if ports['ai_service'] != 8001 else "python main.py",
                 "cwd": "ai-service",
                 "name": "AI-Service",
                 "color": "36",  # Cyan

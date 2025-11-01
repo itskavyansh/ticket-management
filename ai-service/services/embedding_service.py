@@ -1,8 +1,21 @@
 """Embedding service for similarity search and vector operations."""
 import logging
-import numpy as np
 from typing import List, Dict, Tuple, Optional
 import hashlib
+
+# Try to import numpy with fallback
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+    # Mock numpy for basic operations
+    class MockNumpy:
+        def array(self, data): return data
+        def dot(self, a, b): return sum(x*y for x,y in zip(a,b)) if len(a) == len(b) else 0
+        def linalg(self): 
+            return type('obj', (object,), {'norm': lambda x: (sum(i**2 for i in x))**0.5})()
+    np = MockNumpy()
 
 from clients.gemini_client import gemini_client
 from cache.redis_cache import redis_cache

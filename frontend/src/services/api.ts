@@ -1,11 +1,10 @@
 import axios from 'axios';
 import { Ticket, TicketFilters, TicketSortOptions, BulkOperation } from '../types/ticket';
 import { PerformanceMetrics, SLAAlert, TicketTrendData } from '../types/analytics';
-import { mockApiService } from './mockApi';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const AI_SERVICE_URL = 'http://localhost:8001';
-const USE_MOCK_API = import.meta.env.DEV && !import.meta.env.VITE_USE_REAL_API;
+
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -80,55 +79,47 @@ export interface ChatbotResponse {
   processingTime?: number;
 }
 
-// Helper function to handle API calls with fallback to mock data
-async function apiCallWithFallback<T>(
-  apiCall: () => Promise<T>,
-  mockCall: () => Promise<T>,
-  fallbackMessage?: string
+// Helper function to handle API calls with error handling
+async function apiCall<T>(
+  apiCallFn: () => Promise<T>,
+  errorMessage?: string
 ): Promise<T> {
-  if (USE_MOCK_API) {
-    return mockCall();
-  }
-  
   try {
-    return await apiCall();
+    return await apiCallFn();
   } catch (error) {
-    console.warn(fallbackMessage || 'API call failed, falling back to mock data:', error);
-    return mockCall();
+    console.error(errorMessage || 'API call failed:', error);
+    throw error;
   }
 }
 
 export const apiService = {
   // Dashboard & Analytics
   async getDashboardMetrics(): Promise<PerformanceMetrics> {
-    return apiCallWithFallback(
+    return apiCall(
       async () => {
         const response = await apiClient.get('/dashboard/metrics');
         return response.data;
       },
-      () => mockApiService.getDashboardMetrics(),
       'Failed to fetch dashboard metrics'
     );
   },
 
   async getSLAAlerts(): Promise<SLAAlert[]> {
-    return apiCallWithFallback(
+    return apiCall(
       async () => {
         const response = await apiClient.get('/sla-alerts');
         return response.data;
       },
-      () => mockApiService.getSLAAlerts(),
       'Failed to fetch SLA alerts'
     );
   },
 
   async getTicketTrends(range: string): Promise<TicketTrendData[]> {
-    return apiCallWithFallback(
+    return apiCall(
       async () => {
         const response = await apiClient.get(`/analytics/trends?range=${range}`);
         return response.data;
       },
-      () => mockApiService.getTicketTrends(range),
       'Failed to fetch ticket trends'
     );
   },
@@ -298,45 +289,41 @@ export const apiService = {
     sort?: TicketSortOptions;
     search?: string;
   }): Promise<TicketsResponse> {
-    return apiCallWithFallback(
+    return apiCall(
       async () => {
         const response = await apiClient.get('/tickets', { params });
         return response.data;
       },
-      () => mockApiService.getTickets(params),
       'Failed to fetch tickets'
     );
   },
 
   async getTicket(ticketId: string): Promise<Ticket> {
-    return apiCallWithFallback(
+    return apiCall(
       async () => {
         const response = await apiClient.get(`/tickets/${ticketId}`);
         return response.data;
       },
-      () => mockApiService.getTicket(ticketId),
       'Failed to fetch ticket'
     );
   },
 
   async createTicket(ticket: Partial<Ticket>): Promise<Ticket> {
-    return apiCallWithFallback(
+    return apiCall(
       async () => {
         const response = await apiClient.post('/tickets', ticket);
         return response.data;
       },
-      () => mockApiService.createTicket(ticket),
       'Failed to create ticket'
     );
   },
 
   async updateTicket(ticketId: string, updates: Partial<Ticket>): Promise<Ticket> {
-    return apiCallWithFallback(
+    return apiCall(
       async () => {
         const response = await apiClient.put(`/tickets/${ticketId}`, updates);
         return response.data;
       },
-      () => mockApiService.updateTicket(ticketId, updates),
       'Failed to update ticket'
     );
   },
@@ -346,29 +333,27 @@ export const apiService = {
   },
 
   async bulkUpdateTickets(operation: BulkOperation): Promise<void> {
-    return apiCallWithFallback(
+    return apiCall(
       async () => {
         await apiClient.post('/tickets/bulk', operation);
       },
-      () => mockApiService.bulkUpdateTickets(operation),
       'Failed to perform bulk operation'
     );
   },
 
   // Comments & Activity
   async getTicketComments(ticketId: string) {
-    return apiCallWithFallback(
+    return apiCall(
       async () => {
         const response = await apiClient.get(`/tickets/${ticketId}/comments`);
         return response.data;
       },
-      () => mockApiService.getTicketComments(ticketId),
       'Failed to fetch ticket comments'
     );
   },
 
   async addTicketComment(ticketId: string, content: string, isInternal: boolean) {
-    return apiCallWithFallback(
+    return apiCall(
       async () => {
         const response = await apiClient.post(`/tickets/${ticketId}/comments`, {
           content,
@@ -376,18 +361,16 @@ export const apiService = {
         });
         return response.data;
       },
-      () => mockApiService.addTicketComment(ticketId, content, isInternal),
       'Failed to add comment'
     );
   },
 
   async getTicketActivity(ticketId: string) {
-    return apiCallWithFallback(
+    return apiCall(
       async () => {
         const response = await apiClient.get(`/tickets/${ticketId}/activity`);
         return response.data;
       },
-      () => mockApiService.getTicketActivity(ticketId),
       'Failed to fetch ticket activity'
     );
   },

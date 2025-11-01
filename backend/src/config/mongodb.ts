@@ -69,8 +69,12 @@ export class MongoDBConnection {
       }
       
       // Simple ping to check connection
-      await mongoose.connection.db.admin().ping();
-      return true;
+      if (mongoose.connection.db) {
+        await mongoose.connection.db.admin().ping();
+        return true;
+      }
+      
+      return false;
     } catch (error) {
       logger.error('MongoDB health check failed:', error);
       return false;

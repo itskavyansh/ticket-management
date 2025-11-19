@@ -162,34 +162,54 @@ app.use('*', (req, res) => {
 // Initialize Redis and start server
 async function startServer() {
   try {
-    // Initialize MongoDB connection
-    await mongoConnection.connect();
-    logger.info('MongoDB connection established');
+    // Try to initialize MongoDB connection (optional)
+    try {
+      await mongoConnection.connect();
+      logger.info('MongoDB connection established');
+    } catch (error) {
+      logger.warn('MongoDB connection failed - running without database', { error: (error as Error).message });
+    }
 
-    // Initialize Redis connection
-    await initializeRedis();
-    logger.info('Redis connection established');
+    // Try to initialize Redis connection (optional)
+    try {
+      await initializeRedis();
+      logger.info('Redis connection established');
+    } catch (error) {
+      logger.warn('Redis connection failed - running without cache', { error: (error as Error).message });
+    }
 
-    // Warm critical caches
-    await cacheInvalidationService.warmAllCaches();
-    logger.info('Cache warming completed');
+    // Try to warm critical caches (optional)
+    try {
+      await cacheInvalidationService.warmAllCaches();
+      logger.info('Cache warming completed');
+    } catch (error) {
+      logger.warn('Cache warming skipped', { error: (error as Error).message });
+    }
 
-    // Initialize queue management
-    queueService.createQueue({
-      name: 'resource-intensive',
-      concurrency: 2,
-      maxRetries: 3,
-      retryDelay: 5000,
-      maxRetryDelay: 30000,
-      backoffStrategy: 'exponential',
-      removeOnComplete: 50,
-      removeOnFail: 20
-    });
-    logger.info('Queue management initialized');
+    // Try to initialize queue management (optional)
+    try {
+      queueService.createQueue({
+        name: 'resource-intensive',
+        concurrency: 2,
+        maxRetries: 3,
+        retryDelay: 5000,
+        maxRetryDelay: 30000,
+        backoffStrategy: 'exponential',
+        removeOnComplete: 50,
+        removeOnFail: 20
+      });
+      logger.info('Queue management initialized');
+    } catch (error) {
+      logger.warn('Queue management skipped', { error: (error as Error).message });
+    }
 
-    // Initialize data storage service
-    await dataStorageService.initialize();
-    logger.info('Data storage service initialized');
+    // Try to initialize data storage service (optional)
+    try {
+      await dataStorageService.initialize();
+      logger.info('Data storage service initialized');
+    } catch (error) {
+      logger.warn('Data storage service skipped', { error: (error as Error).message });
+    }
 
     server.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);
@@ -200,7 +220,7 @@ async function startServer() {
         slaMonitoringScheduler.start();
         logger.info('SLA monitoring scheduler started');
       } catch (error) {
-        logger.error('Failed to start SLA monitoring scheduler', { error: (error as Error).message });
+        logger.warn('SLA monitoring scheduler skipped', { error: (error as Error).message });
       }
 
       // Start real-time analytics service
@@ -208,7 +228,7 @@ async function startServer() {
         realTimeAnalyticsService.start();
         logger.info('Real-time analytics service started');
       } catch (error) {
-        logger.error('Failed to start real-time analytics service', { error: (error as Error).message });
+        logger.warn('Real-time analytics service skipped', { error: (error as Error).message });
       }
     });
   } catch (error) {

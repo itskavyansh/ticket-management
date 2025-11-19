@@ -79,6 +79,8 @@ export function useCategoryAnalytics(period: string = '30d') {
     {
       staleTime: 300000, // 5 minutes
       refetchInterval: 600000, // 10 minutes
+      retry: 1,
+      useErrorBoundary: false,
       onError: (error) => {
         console.error('Failed to fetch category analytics:', error);
       }
@@ -154,8 +156,11 @@ export function useDashboardMetrics() {
     {
       staleTime: 60000, // 1 minute
       refetchInterval: 300000, // 5 minutes
+      retry: 1, // Only retry once
+      useErrorBoundary: false, // Don't throw errors to error boundary
       onError: (error) => {
         console.error('Failed to fetch dashboard metrics:', error);
+        toast.error('Using offline dashboard data');
       }
     }
   );
@@ -169,6 +174,8 @@ export function useSLAAlerts() {
     {
       staleTime: 30000, // 30 seconds
       refetchInterval: 60000, // 1 minute
+      retry: 1,
+      useErrorBoundary: false,
       onError: (error) => {
         console.error('Failed to fetch SLA alerts:', error);
       }
@@ -184,6 +191,8 @@ export function useTicketTrends(range: string = '7d') {
     {
       staleTime: 300000, // 5 minutes
       refetchInterval: 600000, // 10 minutes
+      retry: 1,
+      useErrorBoundary: false,
       onError: (error) => {
         console.error('Failed to fetch ticket trends:', error);
       }

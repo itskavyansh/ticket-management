@@ -50,9 +50,11 @@ export function useWorkloadData(filters: WorkloadFilters = {}) {
     {
       staleTime: 60000, // 1 minute
       refetchInterval: 300000, // 5 minutes
+      retry: 1,
+      useErrorBoundary: false,
       onError: (error) => {
         console.error('Failed to fetch workload data:', error);
-        toast.error('Failed to load workload data. Using offline data.');
+        toast.error('Using offline workload data');
       }
     }
   );

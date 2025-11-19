@@ -53,22 +53,18 @@ export function Dashboard() {
     const defaultMetrics = {
       totalTickets: 0,
       openTickets: 0,
+      resolvedTickets: 0,
       slaCompliance: 0,
       averageResolutionTime: 0,
       criticalTickets: 0,
       overdueTickets: 0,
-      resolvedToday: 0,
-      totalTicketsChange: 0,
-      openTicketsChange: 0,
-      slaComplianceChange: 0,
-      resolutionTimeChange: 0,
-      criticalTicketsChange: 0,
-      overdueTicketsChange: 0,
-      utilizationChange: 0,
-      resolvedTodayChange: 0
+      technicianUtilization: 0
     };
     
     const currentMetrics = metrics || defaultMetrics;
+    
+    // Calculate resolved today (use resolvedTickets as approximation)
+    const resolvedToday = currentMetrics.resolvedTickets || 0;
 
     const avgUtilization = workloadData?.technicians?.reduce((sum, tech) => sum + tech.utilization, 0) / (workloadData?.technicians?.length || 1) || 0;
 
@@ -79,8 +75,8 @@ export function Dashboard() {
         value: currentMetrics.totalTickets,
         format: 'number',
         color: 'blue',
-        change: currentMetrics.totalTicketsChange || 0,
-        changeType: (currentMetrics.totalTicketsChange || 0) >= 0 ? 'increase' : 'decrease',
+        change: 0,
+        changeType: 'neutral',
       },
       {
         id: 'open-tickets',
@@ -88,8 +84,8 @@ export function Dashboard() {
         value: currentMetrics.openTickets,
         format: 'number',
         color: 'yellow',
-        change: currentMetrics.openTicketsChange || 0,
-        changeType: (currentMetrics.openTicketsChange || 0) >= 0 ? 'increase' : 'decrease',
+        change: 0,
+        changeType: 'neutral',
       },
       {
         id: 'sla-compliance',
@@ -97,8 +93,8 @@ export function Dashboard() {
         value: currentMetrics.slaCompliance,
         format: 'percentage',
         color: currentMetrics.slaCompliance >= 95 ? 'green' : currentMetrics.slaCompliance >= 90 ? 'yellow' : 'red',
-        change: currentMetrics.slaComplianceChange || 0,
-        changeType: (currentMetrics.slaComplianceChange || 0) >= 0 ? 'increase' : 'decrease',
+        change: 0,
+        changeType: 'neutral',
       },
       {
         id: 'avg-resolution-time',
@@ -106,8 +102,8 @@ export function Dashboard() {
         value: currentMetrics.averageResolutionTime,
         format: 'duration',
         color: 'gray',
-        change: currentMetrics.resolutionTimeChange || 0,
-        changeType: (currentMetrics.resolutionTimeChange || 0) <= 0 ? 'increase' : 'decrease', // Lower is better
+        change: 0,
+        changeType: 'neutral',
       },
       {
         id: 'critical-tickets',
@@ -115,8 +111,8 @@ export function Dashboard() {
         value: currentMetrics.criticalTickets,
         format: 'number',
         color: currentMetrics.criticalTickets > 0 ? 'red' : 'green',
-        change: currentMetrics.criticalTicketsChange || 0,
-        changeType: (currentMetrics.criticalTicketsChange || 0) >= 0 ? 'increase' : 'decrease',
+        change: 0,
+        changeType: 'neutral',
       },
       {
         id: 'overdue-tickets',
@@ -124,8 +120,8 @@ export function Dashboard() {
         value: currentMetrics.overdueTickets,
         format: 'number',
         color: currentMetrics.overdueTickets > 0 ? 'red' : 'green',
-        change: currentMetrics.overdueTicketsChange || 0,
-        changeType: (currentMetrics.overdueTicketsChange || 0) >= 0 ? 'increase' : 'decrease',
+        change: 0,
+        changeType: 'neutral',
       },
       {
         id: 'technician-utilization',
@@ -133,17 +129,17 @@ export function Dashboard() {
         value: avgUtilization,
         format: 'percentage',
         color: avgUtilization > 90 ? 'red' : avgUtilization > 75 ? 'yellow' : 'green',
-        change: currentMetrics.utilizationChange || 0,
-        changeType: (currentMetrics.utilizationChange || 0) >= 0 ? 'increase' : 'decrease',
+        change: 0,
+        changeType: 'neutral',
       },
       {
         id: 'resolved-tickets',
         title: 'Resolved Today',
-        value: currentMetrics.resolvedToday,
+        value: resolvedToday,
         format: 'number',
         color: 'green',
-        change: currentMetrics.resolvedTodayChange || 0,
-        changeType: (currentMetrics.resolvedTodayChange || 0) >= 0 ? 'increase' : 'decrease',
+        change: 0,
+        changeType: 'neutral',
       },
     ];
   }, [metrics, workloadData]);

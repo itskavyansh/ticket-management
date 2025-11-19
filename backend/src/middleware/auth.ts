@@ -6,7 +6,7 @@ import { UserRole } from '../types';
 /**
  * Authentication middleware to verify JWT tokens
  */
-export const authenticate = async (
+const authenticateImpl = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
@@ -264,4 +264,5 @@ export const mockAuth = (req: AuthenticatedRequest, res: Response, next: NextFun
 };
 
 // Use mock auth in development, real auth in production
-export const auth = process.env.NODE_ENV === 'development' ? mockAuth : authenticate;
+export const authenticate = process.env.NODE_ENV === 'development' ? mockAuth : authenticateImpl;
+export const auth = authenticate;

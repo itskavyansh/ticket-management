@@ -32,6 +32,7 @@ export interface SLAAlert {
   ticketId: string;
   ticketTitle: string;
   riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  severity: 'low' | 'medium' | 'high' | 'critical';
   timeRemaining: number;
   assignedTechnician?: string;
   customer: string;

@@ -46,20 +46,20 @@ export function TicketTrendsChart({ data, isLoading }: TicketTrendsChartProps) {
   };
 
   return (
-    <div className="card">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-medium text-gray-900">Ticket Trends</h3>
-        <div className="flex items-center space-x-4 text-sm">
+    <div className="card-elevated">
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Ticket Trends</h3>
+        <div className="flex items-center space-x-4 text-xs">
           <div className="flex items-center">
-            <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+            <div className="w-2.5 h-2.5 bg-blue-500 rounded-full mr-1.5"></div>
             <span className="text-gray-600">Created</span>
           </div>
           <div className="flex items-center">
-            <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+            <div className="w-2.5 h-2.5 bg-green-500 rounded-full mr-1.5"></div>
             <span className="text-gray-600">Resolved</span>
           </div>
           <div className="flex items-center">
-            <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
+            <div className="w-2.5 h-2.5 bg-orange-500 rounded-full mr-1.5"></div>
             <span className="text-gray-600">Open</span>
           </div>
         </div>

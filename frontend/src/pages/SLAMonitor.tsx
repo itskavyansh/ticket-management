@@ -44,7 +44,7 @@ export function SLAMonitor() {
   const [breachPredictions, setBreachPredictions] = useState<SLABreachPrediction[]>([]);
   const [slaMetrics, setSlaMetrics] = useState<SLAMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const { isConnected } = useRealTimeData();
 
   // Mock data
@@ -140,7 +140,7 @@ export function SLAMonitor() {
   const fetchSLAData = useCallback(async () => {
     try {
       setIsLoading(true);
-      
+
       // Try to fetch real data from API
       try {
         const [alertsResponse, predictionsResponse, metricsResponse] = await Promise.all([
@@ -180,8 +180,8 @@ export function SLAMonitor() {
       }
 
       // Update local state optimistically
-      setAlerts(prev => prev.map(alert => 
-        alert.id === alertId 
+      setAlerts(prev => prev.map(alert =>
+        alert.id === alertId
           ? { ...alert, status: 'acknowledged' as const, updatedAt: new Date().toISOString() }
           : alert
       ));
@@ -200,8 +200,8 @@ export function SLAMonitor() {
       }
 
       // Update local state optimistically
-      setAlerts(prev => prev.map(alert => 
-        alert.id === alertId 
+      setAlerts(prev => prev.map(alert =>
+        alert.id === alertId
           ? { ...alert, status: 'escalated' as const, updatedAt: new Date().toISOString() }
           : alert
       ));
@@ -230,7 +230,7 @@ export function SLAMonitor() {
   // Filter alerts based on selected criteria
   const filteredAlerts = useMemo(() => {
     if (!alerts) return [];
-    
+
     return alerts.filter(alert => {
       const severityMatch = selectedSeverity === 'all' || alert.severity === selectedSeverity;
       const statusMatch = selectedStatus === 'all' || alert.status === selectedStatus;
@@ -441,11 +441,10 @@ export function SLAMonitor() {
                     <h4 className="text-sm font-medium text-gray-900">
                       Ticket #{prediction.ticketId}
                     </h4>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      prediction.riskScore >= 0.8 ? 'bg-red-100 text-red-800' :
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${prediction.riskScore >= 0.8 ? 'bg-red-100 text-red-800' :
                       prediction.riskScore >= 0.6 ? 'bg-orange-100 text-orange-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
                       {Math.round(prediction.riskScore * 100)}% Risk
                     </span>
                   </div>
@@ -485,7 +484,7 @@ export function SLAMonitor() {
               </svg>
               <h3 className="mt-2 text-sm font-medium text-gray-900">No alerts found</h3>
               <p className="mt-1 text-sm text-gray-500">
-                {selectedSeverity !== 'all' || selectedStatus !== 'all' 
+                {selectedSeverity !== 'all' || selectedStatus !== 'all'
                   ? 'Try adjusting your filters to see more alerts.'
                   : 'All SLAs are currently on track.'}
               </p>
@@ -493,38 +492,35 @@ export function SLAMonitor() {
           ) : (
             <div className="space-y-4">
               {filteredAlerts.map((alert) => (
-                <div key={alert.id} className={`p-4 rounded-lg border-l-4 ${
-                  alert.severity === 'critical' ? 'bg-red-50 border-red-500' :
+                <div key={alert.id} className={`p-4 rounded-lg border-l-4 ${alert.severity === 'critical' ? 'bg-red-50 border-red-500' :
                   alert.severity === 'high' ? 'bg-orange-50 border-orange-500' :
-                  alert.severity === 'medium' ? 'bg-yellow-50 border-yellow-500' :
-                  'bg-blue-50 border-blue-500'
-                }`}>
+                    alert.severity === 'medium' ? 'bg-yellow-50 border-yellow-500' :
+                      'bg-blue-50 border-blue-500'
+                  }`}>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center">
                         <h4 className="text-sm font-medium text-gray-900">
                           Ticket #{alert.ticketId}
                         </h4>
-                        <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          alert.severity === 'critical' ? 'bg-red-100 text-red-800' :
+                        <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${alert.severity === 'critical' ? 'bg-red-100 text-red-800' :
                           alert.severity === 'high' ? 'bg-orange-100 text-orange-800' :
-                          alert.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-blue-100 text-blue-800'
-                        }`}>
+                            alert.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-blue-100 text-blue-800'
+                          }`}>
                           {alert.severity.toUpperCase()}
                         </span>
-                        <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          alert.status === 'active' ? 'bg-gray-100 text-gray-800' :
+                        <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${alert.status === 'active' ? 'bg-gray-100 text-gray-800' :
                           alert.status === 'acknowledged' ? 'bg-blue-100 text-blue-800' :
-                          alert.status === 'escalated' ? 'bg-purple-100 text-purple-800' :
-                          'bg-green-100 text-green-800'
-                        }`}>
+                            alert.status === 'escalated' ? 'bg-purple-100 text-purple-800' :
+                              'bg-green-100 text-green-800'
+                          }`}>
                           {alert.status.toUpperCase()}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600 mt-1">{alert.message}</p>
                       <p className="text-xs text-gray-500 mt-1">
-                        Time remaining: {alert.timeRemaining} | 
+                        Time remaining: {alert.timeRemaining} |
                         Created: {new Date(alert.createdAt).toLocaleString()}
                       </p>
                     </div>

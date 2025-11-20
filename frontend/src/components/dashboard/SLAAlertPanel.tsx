@@ -54,12 +54,12 @@ export function SLAAlertPanel({ alerts, isLoading }: SLAAlertPanelProps) {
   }
 
   return (
-    <div className="card">
+    <div className="card-elevated">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-medium text-gray-900">SLA Risk Alerts</h3>
-        <div className="flex items-center text-sm text-gray-500">
-          <AlertTriangle className="w-4 h-4 mr-1" />
-          {alerts.length} active alerts
+        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">SLA Risk Alerts</h3>
+        <div className="flex items-center">
+          <AlertTriangle className="w-4 h-4 mr-1 text-orange-600" />
+          <span className="text-xs font-medium text-gray-600">{alerts.length} Active</span>
         </div>
       </div>
 

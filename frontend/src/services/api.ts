@@ -99,26 +99,29 @@ export const apiService = {
       const response = await apiClient.get('/analytics/dashboard');
       const data = response.data.data || response.data;
       
+      console.log('Dashboard metrics response:', data);
+      
       // Map backend DashboardMetrics to frontend PerformanceMetrics
       return {
         totalTickets: data.totalTickets || 0,
         openTickets: data.openTickets || 0,
         resolvedTickets: data.resolvedTickets || 0,
-        slaCompliance: data.slaComplianceRate || 0,
+        slaCompliance: data.slaComplianceRate || data.slaCompliance || 0,
         averageResolutionTime: data.averageResolutionTime || 0,
-        criticalTickets: data.slaRiskTickets || 0,
+        criticalTickets: data.slaRiskTickets || data.criticalTickets || 0,
         overdueTickets: data.overdueTickets || 0,
         technicianUtilization: data.technicianUtilization || 0,
       };
     } catch (error) {
-      console.error('Failed to fetch dashboard metrics, using mock data:', error);
+      console.error('Failed to fetch dashboard metrics:', error);
+      console.log('Using mock data as fallback');
       // Return mock data as fallback
       return {
         totalTickets: 156,
         openTickets: 23,
         resolvedTickets: 133,
         slaCompliance: 94.7,
-        averageResolutionTime: 132.8,
+        averageResolutionTime: 2.2,
         criticalTickets: 5,
         overdueTickets: 3,
         technicianUtilization: 78.5,

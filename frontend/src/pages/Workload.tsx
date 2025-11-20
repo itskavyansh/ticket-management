@@ -233,7 +233,7 @@ export function Workload() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Workload Management</h1>
-          <p className="text-gray-600 mt-1">Monitor and optimize technician workloads</p>
+          <p className="text-sm text-gray-600 mt-0.5">Monitor and optimize technician workloads</p>
           {error ? (
             <p className="text-red-600 text-sm mt-1">
               Failed to load workload data. Using offline data.
@@ -277,61 +277,53 @@ export function Workload() {
         <>
           {/* Overview Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="card">
-              <div className="flex items-center">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Users className="h-6 w-6 text-blue-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Total Technicians</p>
-                  <p className="text-2xl font-semibold text-gray-900">{overallStats.totalTechnicians}</p>
+            <div className="stat-card">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Technicians</p>
+                <div className="p-1.5 bg-blue-50 rounded">
+                  <Users className="h-4 w-4 text-blue-600" />
                 </div>
               </div>
+              <p className="text-2xl font-semibold text-gray-900">{overallStats.totalTechnicians}</p>
             </div>
 
-            <div className="card">
-              <div className="flex items-center">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <TrendingUp className="h-6 w-6 text-green-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Avg Utilization</p>
-                  <p className="text-2xl font-semibold text-gray-900">{overallStats.averageUtilization}%</p>
+            <div className="stat-card">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Avg Utilization</p>
+                <div className="p-1.5 bg-green-50 rounded">
+                  <TrendingUp className="h-4 w-4 text-green-600" />
                 </div>
               </div>
+              <p className="text-2xl font-semibold text-gray-900">{overallStats.averageUtilization}%</p>
             </div>
 
-            <div className="card">
-              <div className="flex items-center">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <AlertTriangle className="h-6 w-6 text-red-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Overloaded</p>
-                  <p className="text-2xl font-semibold text-gray-900">{overallStats.overloadedCount}</p>
+            <div className="stat-card">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Overloaded</p>
+                <div className="p-1.5 bg-red-50 rounded">
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
                 </div>
               </div>
+              <p className="text-2xl font-semibold text-gray-900">{overallStats.overloadedCount}</p>
             </div>
 
-            <div className="card">
-              <div className="flex items-center">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Available</p>
-                  <p className="text-2xl font-semibold text-gray-900">{overallStats.availableCount}</p>
+            <div className="stat-card">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Available</p>
+                <div className="p-1.5 bg-green-50 rounded">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
                 </div>
               </div>
+              <p className="text-2xl font-semibold text-gray-900">{overallStats.availableCount}</p>
             </div>
           </div>
 
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Workload Trends */}
-            <div className="card">
+            <div className="card-elevated">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Workload Trends</h3>
+                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Workload Trends</h3>
               </div>
 
               <ResponsiveContainer width="100%" height={300}>
@@ -355,9 +347,9 @@ export function Workload() {
             </div>
 
             {/* Utilization Distribution */}
-            <div className="card">
+            <div className="card-elevated">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Utilization Distribution</h3>
+                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Utilization Distribution</h3>
               </div>
 
               <div className="flex items-center">
@@ -409,9 +401,9 @@ export function Workload() {
           </div>
 
           {/* Technician Workload Table */}
-          <div className="card">
+          <div className="card-elevated">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-medium text-gray-900">Individual Workloads</h3>
+              <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Individual Workloads</h3>
               <div className="text-sm text-gray-500">
                 Showing {sortedData.length} of {technicians.length} technicians
               </div>
@@ -515,8 +507,8 @@ export function Workload() {
 
       {/* Recommendations */}
       {!isLoading && (
-        <div className="card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">AI Recommendations</h3>
+        <div className="card-elevated">
+          <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">AI Recommendations</h3>
           <div className="space-y-3">
             {overallStats.overloadedCount > 0 && (
               <div className="flex items-start p-3 bg-red-50 border border-red-200 rounded-lg">

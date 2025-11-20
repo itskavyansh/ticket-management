@@ -189,7 +189,7 @@ export function Technicians() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Technicians</h1>
-          <p className="text-gray-600 mt-1">Manage technician profiles and assignments</p>
+          <p className="text-sm text-gray-600 mt-0.5">Manage technician profiles and assignments</p>
           {error && (
             <p className="text-red-600 text-sm mt-1">
               Failed to load technicians. Using offline data.
@@ -222,58 +222,50 @@ export function Technicians() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="card">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <User className="h-6 w-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Technicians</p>
-              <p className="text-2xl font-semibold text-gray-900">{technicians.length}</p>
+        <div className="stat-card">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Technicians</p>
+            <div className="p-1.5 bg-blue-50 rounded">
+              <User className="h-4 w-4 text-blue-600" />
             </div>
           </div>
+          <p className="text-2xl font-semibold text-gray-900">{technicians.length}</p>
         </div>
         
-        <div className="card">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <CheckCircle className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Available</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {technicians.filter(t => t.status === 'available').length}
-              </p>
+        <div className="stat-card">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Available</p>
+            <div className="p-1.5 bg-green-50 rounded">
+              <CheckCircle className="h-4 w-4 text-green-600" />
             </div>
           </div>
+          <p className="text-2xl font-semibold text-gray-900">
+            {technicians.filter(t => t.status === 'available').length}
+          </p>
         </div>
         
-        <div className="card">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <Clock className="h-6 w-6 text-yellow-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Busy</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {technicians.filter(t => t.status === 'busy').length}
-              </p>
+        <div className="stat-card">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Busy</p>
+            <div className="p-1.5 bg-yellow-50 rounded">
+              <Clock className="h-4 w-4 text-yellow-600" />
             </div>
           </div>
+          <p className="text-2xl font-semibold text-gray-900">
+            {technicians.filter(t => t.status === 'busy').length}
+          </p>
         </div>
         
-        <div className="card">
-          <div className="flex items-center">
-            <div className="p-2 bg-gray-100 rounded-lg">
-              <AlertTriangle className="h-6 w-6 text-gray-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Offline</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {technicians.filter(t => t.status === 'offline').length}
-              </p>
+        <div className="stat-card">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Offline</p>
+            <div className="p-1.5 bg-gray-50 rounded">
+              <AlertTriangle className="h-4 w-4 text-gray-600" />
             </div>
           </div>
+          <p className="text-2xl font-semibold text-gray-900">
+            {technicians.filter(t => t.status === 'offline').length}
+          </p>
         </div>
       </div>
 

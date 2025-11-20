@@ -65,12 +65,12 @@ export function CategoryDistributionChart({ data, isLoading }: CategoryDistribut
   };
 
   return (
-    <div className="card">
+    <div className="card-elevated">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-medium text-gray-900">Ticket Categories</h3>
-        <div className="text-sm text-gray-500">
-          Total: {data.reduce((sum, item) => sum + item.count, 0)} tickets
-        </div>
+        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Ticket Categories</h3>
+        <span className="text-xs text-gray-600">
+          {data.reduce((sum, item) => sum + item.count, 0)} Total
+        </span>
       </div>
 
       <div className="flex flex-col lg:flex-row items-center">

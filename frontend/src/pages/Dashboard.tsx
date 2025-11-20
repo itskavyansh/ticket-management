@@ -47,6 +47,35 @@ export function Dashboard() {
     },
   ];
 
+  // Calculate trends from historical data
+  const calculateTrend = (trendData: any[], key: string) => {
+    if (!trendData || trendData.length < 2) {
+      console.log(`No trend data for ${key}:`, trendData?.length || 0, 'items');
+      return { change: 0, changeType: 'neutral' as const };
+    }
+    
+    // Get last 7 days and previous 7 days for comparison
+    const recentData = trendData.slice(-7);
+    const previousData = trendData.slice(-14, -7);
+    
+    if (recentData.length === 0 || previousData.length === 0) {
+      console.log(`Insufficient data for ${key}:`, { recent: recentData.length, previous: previousData.length });
+      return { change: 0, changeType: 'neutral' as const };
+    }
+    
+    const recentAvg = recentData.reduce((sum, item) => sum + (item[key] || 0), 0) / recentData.length;
+    const previousAvg = previousData.reduce((sum, item) => sum + (item[key] || 0), 0) / previousData.length;
+    
+    if (previousAvg === 0) return { change: 0, changeType: 'neutral' as const };
+    
+    const percentChange = ((recentAvg - previousAvg) / previousAvg) * 100;
+    const changeType = percentChange > 0 ? 'increase' as const : percentChange < 0 ? 'decrease' as const : 'neutral' as const;
+    
+    console.log(`Trend for ${key}:`, { recentAvg, previousAvg, percentChange: percentChange.toFixed(1), changeType });
+    
+    return { change: Math.abs(percentChange), changeType };
+  };
+
   // Transform metrics data into KPI widgets
   const kpis: DashboardKPI[] = useMemo(() => {
     // Provide default metrics if API data is not available
@@ -68,6 +97,11 @@ export function Dashboard() {
 
     const avgUtilization = workloadData?.technicians?.reduce((sum, tech) => sum + tech.utilization, 0) / (workloadData?.technicians?.length || 1) || 0;
 
+    // Calculate trends from trend data
+    const totalTicketsTrend = calculateTrend(trends || [], 'created');
+    const openTicketsTrend = calculateTrend(trends || [], 'open');
+    const resolvedTicketsTrend = calculateTrend(trends || [], 'resolved');
+
     return [
       {
         id: 'total-tickets',
@@ -75,8 +109,8 @@ export function Dashboard() {
         value: currentMetrics.totalTickets,
         format: 'number',
         color: 'blue',
-        change: 0,
-        changeType: 'neutral',
+        change: totalTicketsTrend.change,
+        changeType: totalTicketsTrend.changeType,
       },
       {
         id: 'open-tickets',
@@ -84,8 +118,8 @@ export function Dashboard() {
         value: currentMetrics.openTickets,
         format: 'number',
         color: 'yellow',
-        change: 0,
-        changeType: 'neutral',
+        change: openTicketsTrend.change,
+        changeType: openTicketsTrend.changeType,
       },
       {
         id: 'sla-compliance',
@@ -138,11 +172,11 @@ export function Dashboard() {
         value: resolvedToday,
         format: 'number',
         color: 'green',
-        change: 0,
-        changeType: 'neutral',
+        change: resolvedTicketsTrend.change,
+        changeType: resolvedTicketsTrend.changeType,
       },
     ];
-  }, [metrics, workloadData]);
+  }, [metrics, workloadData, trends]);
 
   // Enhanced loading state
   const isLoading = metricsLoading || workloadLoading || alertsLoading || trendsLoading || categoryLoading;
@@ -154,14 +188,20 @@ export function Dashboard() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-        <div className="flex items-center gap-4">
-          {/* Time Range Selector */}
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+          <p className="text-sm text-gray-600 mt-0.5">Real-time IT support metrics and analytics</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <RealTimeIndicator 
+            isConnected={isConnected} 
+            lastUpdate={new Date()} 
+          />
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="24h">Last 24 Hours</option>
             <option value="7d">Last 7 Days</option>
@@ -169,37 +209,31 @@ export function Dashboard() {
             <option value="90d">Last 90 Days</option>
           </select>
           
-          {/* Refresh Button */}
           <button
             onClick={refreshData}
             disabled={isLoading}
-            className="px-3 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? 'Refreshing...' : 'Refresh'}
           </button>
-          
-          <RealTimeIndicator 
-            isConnected={isConnected} 
-            lastUpdate={new Date()} 
-          />
         </div>
       </div>
 
       {/* Critical Alerts Banner */}
       {alerts && alerts.filter(alert => alert.severity === 'critical').length > 0 && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-600 rounded">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <svg className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">
-                Critical SLA Breaches Detected
+                Critical SLA Alerts Require Immediate Attention
               </h3>
               <p className="text-sm text-red-700 mt-1">
-                {alerts.filter(alert => alert.severity === 'critical').length} tickets are at risk of SLA breach
+                {alerts.filter(alert => alert.severity === 'critical').length} critical alerts detected
               </p>
             </div>
           </div>
@@ -234,11 +268,16 @@ export function Dashboard() {
       {/* Breach Predictions */}
       {breachPredictions && breachPredictions.length > 0 && (
         <div className="mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">SLA Breach Predictions</h3>
-            <div className="space-y-3">
+          <div className="card-elevated">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">SLA Breach Predictions</h3>
+              <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                {breachPredictions.length} At Risk
+              </span>
+            </div>
+            <div className="space-y-2">
               {breachPredictions.slice(0, 5).map((prediction) => (
-                <div key={prediction.ticketId} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                <div key={prediction.ticketId} className="flex items-center justify-between p-3 bg-yellow-50 rounded border border-yellow-200">
                   <div>
                     <p className="text-sm font-medium text-gray-900">
                       Ticket #{prediction.ticketId}
@@ -264,23 +303,23 @@ export function Dashboard() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-          <div className="space-y-3">
-            <button className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-md">
+        <div className="card-elevated">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">Quick Actions</h3>
+          <div className="space-y-2">
+            <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors">
               Create New Ticket
             </button>
-            <button className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-md">
+            <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors">
               Assign Bulk Tickets
             </button>
-            <button className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-md">
+            <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors">
               Generate Report
             </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Top Performers</h3>
+        <div className="card-elevated">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">Top Performers</h3>
           <div className="space-y-3">
             {workloadData?.technicians?.slice(0, 3).map((tech, index) => (
               <div key={tech.id} className="flex items-center justify-between">
@@ -298,24 +337,33 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">System Status</h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">API Status</span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+        <div className="card-elevated">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">System Status</h3>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between py-2">
+              <div className="flex items-center">
+                <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                <span className="text-sm text-gray-700">API Status</span>
+              </div>
+              <span className="text-xs text-green-600 font-medium">
                 Operational
               </span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Database</span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <div className="flex items-center justify-between py-2">
+              <div className="flex items-center">
+                <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                <span className="text-sm text-gray-700">Database</span>
+              </div>
+              <span className="text-xs text-green-600 font-medium">
                 Healthy
               </span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">AI Service</span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <div className="flex items-center justify-between py-2">
+              <div className="flex items-center">
+                <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                <span className="text-sm text-gray-700">AI Service</span>
+              </div>
+              <span className="text-xs text-green-600 font-medium">
                 Active
               </span>
             </div>

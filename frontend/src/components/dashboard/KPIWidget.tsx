@@ -57,46 +57,44 @@ export function KPIWidget({ kpi, isLoading }: KPIWidgetProps) {
   }
 
   return (
-    <div className="card hover:shadow-md transition-shadow duration-200">
+    <div className="stat-card">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-medium text-gray-500">{kpi.title}</h3>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{kpi.title}</p>
         {kpi.icon && (
           <div className={clsx(
-            'p-2 rounded-lg',
-            kpi.color === 'green' && 'bg-green-100 text-green-600',
-            kpi.color === 'red' && 'bg-red-100 text-red-600',
-            kpi.color === 'blue' && 'bg-blue-100 text-blue-600',
-            kpi.color === 'yellow' && 'bg-yellow-100 text-yellow-600',
-            (!kpi.color || kpi.color === 'gray') && 'bg-gray-100 text-gray-600'
+            'p-1.5 rounded',
+            kpi.color === 'green' && 'bg-green-50 text-green-600',
+            kpi.color === 'red' && 'bg-red-50 text-red-600',
+            kpi.color === 'blue' && 'bg-blue-50 text-blue-600',
+            kpi.color === 'yellow' && 'bg-yellow-50 text-yellow-600',
+            (!kpi.color || kpi.color === 'gray') && 'bg-gray-50 text-gray-600'
           )}>
             {/* Icon would be rendered here based on kpi.icon string */}
           </div>
         )}
       </div>
       
-      <div className="flex items-end justify-between">
-        <div>
-          <p className={clsx(
-            'text-2xl font-semibold',
-            kpi.color === 'green' && 'text-green-600',
-            kpi.color === 'red' && 'text-red-600',
-            kpi.color === 'blue' && 'text-blue-600',
-            kpi.color === 'yellow' && 'text-yellow-600',
-            (!kpi.color || kpi.color === 'gray') && 'text-gray-900'
-          )}>
-            {formatValue(kpi.value, kpi.format)}
-          </p>
-          
-          {kpi.change !== undefined && (
-            <div className={clsx('flex items-center mt-1 text-sm', getChangeColor())}>
-              {getChangeIcon()}
-              <span className="ml-1">
-                {Math.abs(kpi.change).toFixed(1)}%
-              </span>
-              <span className="ml-1 text-gray-500">vs last period</span>
-            </div>
-          )}
-        </div>
+      <div>
+        <p className={clsx(
+          'text-2xl font-semibold mb-1',
+          kpi.color === 'green' && 'text-green-600',
+          kpi.color === 'red' && 'text-red-600',
+          kpi.color === 'blue' && 'text-blue-600',
+          kpi.color === 'yellow' && 'text-yellow-600',
+          (!kpi.color || kpi.color === 'gray') && 'text-gray-900'
+        )}>
+          {formatValue(kpi.value, kpi.format)}
+        </p>
+        
+        {kpi.change !== undefined && kpi.change !== 0 && (
+          <div className={clsx('flex items-center text-xs', getChangeColor())}>
+            {getChangeIcon()}
+            <span className="ml-1 font-medium">
+              {Math.abs(kpi.change).toFixed(1)}%
+            </span>
+            <span className="ml-1 text-gray-500">vs last week</span>
+          </div>
+        )}
       </div>
     </div>
   );

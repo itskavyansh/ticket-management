@@ -15,8 +15,6 @@ import {
   Clock,
   AlertTriangle,
   Plus,
-  Moon,
-  Sun,
   ChevronRight,
   Home,
   HelpCircle,
@@ -71,7 +69,7 @@ export function Layout({ children }: LayoutProps) {
     const breadcrumbs = [{ name: 'Home', href: '/', icon: Home }]
     
     let currentPath = ''
-    pathSegments.forEach((segment, index) => {
+    pathSegments.forEach((segment) => {
       currentPath += `/${segment}`
       const navItem = navigation.find(item => item.href === currentPath)
       if (navItem) {
@@ -163,7 +161,7 @@ export function Layout({ children }: LayoutProps) {
   }, [quickActionsOpen, notificationsOpen])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Mobile sidebar */}
       <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
@@ -173,7 +171,7 @@ export function Layout({ children }: LayoutProps) {
               <div className="h-8 w-8 rounded-lg bg-primary-600 flex items-center justify-center mr-3">
                 <LayoutDashboard className="h-5 w-5 text-white" />
               </div>
-              <h1 className="text-lg font-semibold text-gray-900">AI Ticket Platform</h1>
+              <h1 className="text-lg font-semibold text-gray-900">ResolveIQ</h1>
             </div>
             <button onClick={() => setSidebarOpen(false)}>
               <X className="h-6 w-6" />
@@ -272,18 +270,18 @@ export function Layout({ children }: LayoutProps) {
       {/* Desktop sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-col flex-grow bg-white border-r border-gray-200">
-          <div className="flex h-16 items-center px-4 border-b border-gray-200">
+          <div className="flex h-16 items-center px-6 border-b border-gray-200">
             <div className="flex items-center">
-              <div className="h-8 w-8 rounded-lg bg-primary-600 flex items-center justify-center mr-3">
-                <LayoutDashboard className="h-5 w-5 text-white" />
+              <div className="h-8 w-8 rounded bg-blue-600 flex items-center justify-center mr-3">
+                <LayoutDashboard className="h-4 w-4 text-white" />
               </div>
-              <h1 className="text-lg font-semibold text-gray-900">AI Ticket Platform</h1>
+              <h1 className="text-base font-semibold text-gray-900">ResolveIQ</h1>
             </div>
           </div>
           
           <nav className="flex-1 space-y-1 px-3 py-4">
-            <div className="space-y-1">
-              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-2 py-1">
+            <div className="space-y-0.5">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-4 py-3">
                 Main
               </div>
               {navigation.slice(0, 2).map((item) => {
@@ -292,21 +290,21 @@ export function Layout({ children }: LayoutProps) {
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    className={`group flex items-center px-4 py-2 text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-primary-100 text-primary-700 border-r-2 border-primary-600'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                        : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                    <item.icon className="mr-3 h-4 w-4 flex-shrink-0" />
                     {item.name}
                   </Link>
                 )
               })}
             </div>
             
-            <div className="space-y-1 pt-4">
-              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-2 py-1">
+            <div className="space-y-0.5 pt-4">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-4 py-3">
                 Management
               </div>
               {navigation.slice(2, 6).map((item) => {
@@ -315,21 +313,21 @@ export function Layout({ children }: LayoutProps) {
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    className={`group flex items-center px-4 py-2 text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-primary-100 text-primary-700 border-r-2 border-primary-600'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                        : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                    <item.icon className="mr-3 h-4 w-4 flex-shrink-0" />
                     {item.name}
                   </Link>
                 )
               })}
             </div>
             
-            <div className="space-y-1 pt-4">
-              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-2 py-1">
+            <div className="space-y-0.5 pt-4">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-4 py-3">
                 System
               </div>
               {navigation.slice(6).map((item) => {
@@ -338,13 +336,13 @@ export function Layout({ children }: LayoutProps) {
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    className={`group flex items-center px-4 py-2 text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-primary-100 text-primary-700 border-r-2 border-primary-600'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                        : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                    <item.icon className="mr-3 h-4 w-4 flex-shrink-0" />
                     {item.name}
                   </Link>
                 )
@@ -369,7 +367,7 @@ export function Layout({ children }: LayoutProps) {
 
       {/* Main content */}
       <div className="lg:pl-64">
-        <div className="flex h-16 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm lg:px-6">
+        <div className="flex h-16 items-center gap-x-4 border-b border-gray-200 bg-white px-4 lg:px-6">
           <button
             type="button"
             className="lg:hidden"
@@ -383,13 +381,13 @@ export function Layout({ children }: LayoutProps) {
             <div className="flex flex-1 items-center">
               <div className="relative w-full max-w-md">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <Search className="h-5 w-5 text-gray-400" />
+                  <Search className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
                   type="text"
                   placeholder="Search tickets, technicians..."
                   onClick={() => setSearchOpen(true)}
-                  className="block w-full rounded-md border-0 py-1.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 cursor-pointer"
+                  className="block w-full rounded-md border border-gray-300 py-1.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer"
                   readOnly
                 />
               </div>
@@ -400,10 +398,11 @@ export function Layout({ children }: LayoutProps) {
               <div className="relative" ref={quickActionsRef}>
                 <button
                   onClick={() => setQuickActionsOpen(!quickActionsOpen)}
-                  className="rounded-full bg-blue-600 p-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                  className="rounded-md bg-blue-600 px-3 py-1.5 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors flex items-center gap-1.5"
                   title="Quick Actions (Ctrl+Shift+A)"
                 >
-                  <Plus className="h-5 w-5" />
+                  <Plus className="h-4 w-4" />
+                  <span className="text-sm font-medium">New</span>
                 </button>
                 
                 {/* Quick Actions Menu */}
@@ -554,13 +553,13 @@ export function Layout({ children }: LayoutProps) {
         {breadcrumbs.length > 1 && (
           <div className="border-b border-gray-200 bg-white px-4 lg:px-6">
             <div className="flex items-center space-x-2 py-3">
-              {breadcrumbs.map((breadcrumb, index) => {
+              {breadcrumbs.map((breadcrumb, idx) => {
                 const Icon = breadcrumb.icon
-                const isLast = index === breadcrumbs.length - 1
+                const isLast = idx === breadcrumbs.length - 1
                 
                 return (
                   <div key={breadcrumb.href} className="flex items-center">
-                    {index > 0 && (
+                    {idx > 0 && (
                       <ChevronRight className="h-4 w-4 text-gray-400 mx-2" />
                     )}
                     {isLast ? (

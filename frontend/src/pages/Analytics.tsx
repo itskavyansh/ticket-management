@@ -101,7 +101,7 @@ export function Analytics() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Analytics</h1>
-          <p className="text-gray-600 mt-1">Comprehensive performance insights and trends</p>
+          <p className="text-sm text-gray-600 mt-0.5">Comprehensive performance insights and trends</p>
           <div className="flex items-center space-x-2 mt-2">
             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
               Period: {selectedPeriod === '7d' ? 'Last 7 days' : selectedPeriod === '30d' ? 'Last 30 days' : selectedPeriod === '90d' ? 'Last 90 days' : 'Last year'}
@@ -173,66 +173,58 @@ export function Analytics() {
         <>
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="card">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Tickets Resolved</p>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {summary.totalTicketsResolved}
-                  </p>
-                </div>
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <CheckCircle className="h-6 w-6 text-blue-600" />
+            <div className="stat-card">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tickets Resolved</p>
+                <div className="p-1.5 bg-blue-50 rounded">
+                  <CheckCircle className="h-4 w-4 text-blue-600" />
                 </div>
               </div>
+              <p className="text-2xl font-semibold text-gray-900">
+                {summary.totalTicketsResolved}
+              </p>
               <div className={`flex items-center mt-2 text-sm ${trends.tickets.isPositive ? 'text-green-600' : 'text-red-600'}`}>
                 {trends.tickets.isPositive ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
                 {trends.tickets.value.toFixed(1)}% vs last week
               </div>
             </div>
 
-            <div className="card">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">SLA Compliance</p>
-                  <p className="text-2xl font-semibold text-gray-900">{summary.avgSlaCompliance.toFixed(1)}%</p>
-                </div>
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <AlertTriangle className="h-6 w-6 text-green-600" />
+            <div className="stat-card">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">SLA Compliance</p>
+                <div className="p-1.5 bg-green-50 rounded">
+                  <AlertTriangle className="h-4 w-4 text-green-600" />
                 </div>
               </div>
+              <p className="text-2xl font-semibold text-gray-900">{summary.avgSlaCompliance.toFixed(1)}%</p>
               <div className={`flex items-center mt-2 text-sm ${trends.sla.isPositive ? 'text-green-600' : 'text-red-600'}`}>
                 {trends.sla.isPositive ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
                 {trends.sla.value.toFixed(1)}% vs last week
               </div>
             </div>
 
-            <div className="card">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Avg Resolution Time</p>
-                  <p className="text-2xl font-semibold text-gray-900">{summary.avgResolutionTime.toFixed(1)}h</p>
-                </div>
-                <div className="p-2 bg-yellow-100 rounded-lg">
-                  <Clock className="h-6 w-6 text-yellow-600" />
+            <div className="stat-card">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Avg Resolution Time</p>
+                <div className="p-1.5 bg-yellow-50 rounded">
+                  <Clock className="h-4 w-4 text-yellow-600" />
                 </div>
               </div>
+              <p className="text-2xl font-semibold text-gray-900">{summary.avgResolutionTime.toFixed(1)}h</p>
               <div className={`flex items-center mt-2 text-sm ${!trends.resolutionTime.isPositive ? 'text-green-600' : 'text-red-600'}`}>
                 {!trends.resolutionTime.isPositive ? <TrendingDown className="h-4 w-4 mr-1" /> : <TrendingUp className="h-4 w-4 mr-1" />}
                 {trends.resolutionTime.value.toFixed(1)}% vs last week
               </div>
             </div>
 
-            <div className="card">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Customer Satisfaction</p>
-                  <p className="text-2xl font-semibold text-gray-900">{summary.avgCustomerSatisfaction.toFixed(1)}/5</p>
-                </div>
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Users className="h-6 w-6 text-purple-600" />
+            <div className="stat-card">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer Satisfaction</p>
+                <div className="p-1.5 bg-purple-50 rounded">
+                  <Users className="h-4 w-4 text-purple-600" />
                 </div>
               </div>
+              <p className="text-2xl font-semibold text-gray-900">{summary.avgCustomerSatisfaction.toFixed(1)}/5</p>
               <div className={`flex items-center mt-2 text-sm ${trends.satisfaction.isPositive ? 'text-green-600' : 'text-red-600'}`}>
                 {trends.satisfaction.isPositive ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
                 {trends.satisfaction.value.toFixed(1)}% vs last week
@@ -347,10 +339,10 @@ export function Analytics() {
         </div>
 
         {/* Category Performance */}
-        <div className="card">
+        <div className="card-elevated">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
-              <h3 className="text-lg font-medium text-gray-900">Category Performance</h3>
+              <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Category Performance</h3>
               {isLoading && <Loader2 className="h-4 w-4 animate-spin text-primary-600 ml-2" />}
             </div>
           </div>
@@ -381,8 +373,8 @@ export function Analytics() {
       {/* Detailed Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* SLA Compliance Trend */}
-        <div className="card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">SLA Compliance Trend</h3>
+        <div className="card-elevated">
+          <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">SLA Compliance Trend</h3>
           <ResponsiveContainer width="100%" height={200} key={`sla-${selectedPeriod}`}>
             <LineChart data={timeSeriesData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -413,8 +405,8 @@ export function Analytics() {
         </div>
 
         {/* Resolution Time Distribution */}
-        <div className="card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Resolution Time</h3>
+        <div className="card-elevated">
+          <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">Resolution Time</h3>
           <ResponsiveContainer width="100%" height={200} key={`resolution-${selectedPeriod}`}>
             <LineChart data={timeSeriesData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -441,8 +433,8 @@ export function Analytics() {
         </div>
 
         {/* Customer Satisfaction */}
-        <div className="card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Customer Satisfaction</h3>
+        <div className="card-elevated">
+          <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">Customer Satisfaction</h3>
           <ResponsiveContainer width="100%" height={200} key={`satisfaction-${selectedPeriod}`}>
             <LineChart data={timeSeriesData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -474,9 +466,9 @@ export function Analytics() {
       </div>
 
       {/* Category Details Table */}
-      <div className="card">
+      <div className="card-elevated">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-medium text-gray-900">Category Performance Details</h3>
+          <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Category Performance Details</h3>
         </div>
 
         <div className="overflow-x-auto">
@@ -541,9 +533,9 @@ export function Analytics() {
       </div>
 
       {/* Technician Performance */}
-      <div className="card">
+      <div className="card-elevated">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-medium text-gray-900">Top Performing Technicians</h3>
+          <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Top Performing Technicians</h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -584,9 +576,9 @@ export function Analytics() {
 
       {/* Performance Insights */}
       {insights && (
-        <div className="card">
+        <div className="card-elevated">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-medium text-gray-900">Performance Insights</h3>
+            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Performance Insights</h3>
             <Info className="h-5 w-5 text-gray-400" />
           </div>
 
